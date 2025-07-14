@@ -1,0 +1,160 @@
+import type { Express } from "express";
+import { createServer, type Server } from "http";
+import { storage } from "./storage";
+import { insertTourSchema, insertBookingSchema } from "@shared/schema";
+import { z } from "zod";
+
+export async function registerRoutes(app: Express): Promise<Server> {
+  
+  // Tours API
+  app.get("/api/tours", async (req, res) => {
+    try {
+      const { category, hot } = req.query;
+      
+      let tours;
+      if (category) {
+        tours = await storage.getToursByCategory(category as string);
+      } else if (hot === "true") {
+        tours = await storage.getHotTours();
+      } else {
+        tours = await storage.getAllTours();
+      }
+      
+      res.json(tours);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch tours" });
+    }
+  });
+
+  app.get("/api/tours/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const tour = await storage.getTour(id);
+      
+      if (!tour) {
+        return res.status(404).json({ message: "Tour not found" });
+      }
+      
+      res.json(tour);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch tour" });
+    }
+  });
+
+  app.post("/api/tours", async (req, res) => {
+    try {
+      const tourData = insertTourSchema.parse(req.body);
+      const tour = await storage.createTour(tourData);
+      res.status(201).json(tour);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid tour data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create tour" });
+    }
+  });
+
+  app.put("/api/tours/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const tourData = insertTourSchema.partial().parse(req.body);
+      const tour = await storage.updateTour(id, tourData);
+      
+      if (!tour) {
+        return res.status(404).json({ message: "Tour not found" });
+      }
+      
+      res.json(tour);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid tour data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update tour" });
+    }
+  });
+
+  app.delete("/api/tours/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteTour(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Tour not found" });
+      }
+      
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete tour" });
+    }
+  });
+
+  // Bookings API
+  app.get("/api/bookings", async (req, res) => {
+    try {
+      const { tourId } = req.query;
+      
+      let bookings;
+      if (tourId) {
+        bookings = await storage.getBookingsByTour(parseInt(tourId as string));
+      } else {
+        bookings = await storage.getAllBookings();
+      }
+      
+      res.json(bookings);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch bookings" });
+    }
+  });
+
+  app.get("/api/bookings/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const booking = await storage.getBooking(id);
+      
+      if (!booking) {
+        return res.status(404).json({ message: "Booking not found" });
+      }
+      
+      res.json(booking);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch booking" });
+    }
+  });
+
+  app.post("/api/bookings", async (req, res) => {
+    try {
+      const bookingData = insertBookingSchema.parse(req.body);
+      const booking = await storage.createBooking(bookingData);
+      res.status(201).json(booking);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid booking data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create booking" });
+    }
+  });
+
+  app.patch("/api/bookings/:id/status", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { status } = req.body;
+      
+      if (!status || typeof status !== "string") {
+        return res.status(400).json({ message: "Status is required" });
+      }
+      
+      const booking = await storage.updateBookingStatus(id, status);
+      
+      if (!booking) {
+        return res.status(404).json({ message: "Booking not found" });
+      }
+      
+      res.json(booking);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update booking status" });
+    }
+  });
+
+  const httpServer = createServer(app);
+  return httpServer;
+}
