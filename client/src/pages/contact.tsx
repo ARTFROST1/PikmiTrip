@@ -138,14 +138,8 @@ export default function Contact() {
 
       {/* Contact Info Section */}
       <section className="py-16 relative overflow-hidden">
-        {/* Animated gradient background similar to hero */}
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 via-sky-500/20 to-purple-600/20"></div>
-        <div className="absolute inset-0 bg-gradient-to-tr from-pink-500/10 via-transparent to-cyan-500/10 animate-pulse"></div>
-        <div className="absolute inset-0 opacity-50">
-          <div className="absolute top-0 left-1/4 w-72 h-72 bg-emerald-500/30 rounded-full mix-blend-multiply filter blur-xl animate-blob"></div>
-          <div className="absolute top-0 right-1/4 w-72 h-72 bg-sky-500/30 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-2000"></div>
-          <div className="absolute bottom-0 left-1/3 w-72 h-72 bg-purple-500/30 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-4000"></div>
-        </div>
+        {/* Animated gradient background exactly like hero */}
+        <div className="absolute inset-0 gradient-bg-animated"></div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
