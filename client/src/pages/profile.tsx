@@ -170,7 +170,7 @@ export default function Profile() {
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="bookings">Мои бронирования</TabsTrigger>
                 <TabsTrigger value="favorites">Избранное</TabsTrigger>
-                <TabsTrigger value="reviews">Отзывы</TabsTrigger>
+                <TabsTrigger value="settings">Настройки</TabsTrigger>
               </TabsList>
 
               <TabsContent value="bookings" className="space-y-6">

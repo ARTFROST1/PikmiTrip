@@ -14,8 +14,10 @@ export default function Header() {
 
   const navigation = [
     { name: "Туры", href: "/tours" },
-    { name: "О нас", href: "/#about" },
-    { name: "Контакты", href: "/#contact" },
+    { name: "О нас", href: "/about" },
+    { name: "Блог", href: "/blog" },
+    { name: "FAQ", href: "/faq" },
+    { name: "Контакты", href: "/contact" },
   ];
 
   const isActive = (href: string) => {
@@ -43,17 +45,15 @@ export default function Header() {
           
           <nav className="hidden md:flex items-center space-x-8">
             {navigation.map((item) => (
-              <a
-                key={item.name}
-                href={item.href}
-                className={`transition-colors ${
+              <Link key={item.name} href={item.href}>
+                <span className={`cursor-pointer transition-colors ${
                   isActive(item.href)
                     ? "text-emerald-600"
                     : "text-gray-600 hover:text-emerald-600"
-                }`}
-              >
-                {item.name}
-              </a>
+                }`}>
+                  {item.name}
+                </span>
+              </Link>
             ))}
           </nav>
           
@@ -121,18 +121,18 @@ export default function Header() {
           >
             <div className="px-4 py-4 space-y-2">
               {navigation.map((item) => (
-                <a
-                  key={item.name}
-                  href={item.href}
-                  className={`block py-2 transition-colors ${
-                    isActive(item.href)
-                      ? "text-emerald-600"
-                      : "text-gray-600 hover:text-emerald-600"
-                  }`}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {item.name}
-                </a>
+                <Link key={item.name} href={item.href}>
+                  <span
+                    className={`block py-2 cursor-pointer transition-colors ${
+                      isActive(item.href)
+                        ? "text-emerald-600"
+                        : "text-gray-600 hover:text-emerald-600"
+                    }`}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    {item.name}
+                  </span>
+                </Link>
               ))}
               
               {isAuthenticated ? (
