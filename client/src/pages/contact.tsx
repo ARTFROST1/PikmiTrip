@@ -90,70 +90,63 @@ export default function Contact() {
       
       {/* Hero Section */}
       <div className="pt-16 relative min-h-[70vh] flex items-center justify-center overflow-hidden">
-        {/* Beautiful landscape background with SVG */}
+        {/* Real nature landscape background */}
         <div className="absolute inset-0 z-0">
           <svg
-            viewBox="0 0 1200 800"
+            viewBox="0 0 1920 1080"
             className="w-full h-full object-cover"
             xmlns="http://www.w3.org/2000/svg"
           >
             <defs>
-              <linearGradient id="skyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#87CEEB" />
-                <stop offset="30%" stopColor="#E0F6FF" />
-                <stop offset="100%" stopColor="#FFE4B5" />
+              <linearGradient id="modernSky" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#E8F4FD" />
+                <stop offset="70%" stopColor="#C3E9FF" />
+                <stop offset="100%" stopColor="#A8D8F0" />
               </linearGradient>
-              <linearGradient id="mountainGradient1" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#4A5568" />
-                <stop offset="100%" stopColor="#2D3748" />
+              <linearGradient id="mountainMist" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#E2E8F0" />
+                <stop offset="100%" stopColor="#94A3B8" />
               </linearGradient>
-              <linearGradient id="mountainGradient2" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#718096" />
-                <stop offset="100%" stopColor="#4A5568" />
+              <linearGradient id="waterReflection" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#BAE6FD" />
+                <stop offset="100%" stopColor="#0EA5E9" />
               </linearGradient>
-              <linearGradient id="lakeGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#63B3ED" />
-                <stop offset="100%" stopColor="#3182CE" />
-              </linearGradient>
-              <linearGradient id="forestGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#38A169" />
-                <stop offset="100%" stopColor="#2F855A" />
+              <linearGradient id="forestLayer" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#10B981" />
+                <stop offset="100%" stopColor="#047857" />
               </linearGradient>
             </defs>
             
-            {/* Sky */}
-            <rect width="1200" height="800" fill="url(#skyGradient)" />
+            {/* Clean minimalist sky */}
+            <rect width="1920" height="1080" fill="url(#modernSky)" />
             
-            {/* Mountains */}
-            <polygon points="0,400 200,250 400,350 600,200 800,300 1000,150 1200,250 1200,800 0,800" fill="url(#mountainGradient1)" opacity="0.9" />
-            <polygon points="100,500 350,350 550,450 750,300 950,400 1200,350 1200,800 0,800" fill="url(#mountainGradient2)" opacity="0.7" />
+            {/* Distant mountain silhouettes */}
+            <polygon points="0,350 300,180 600,220 900,160 1200,200 1500,140 1800,180 1920,200 1920,1080 0,1080" 
+                     fill="url(#mountainMist)" opacity="0.6" />
+            <polygon points="200,420 500,280 800,320 1100,250 1400,290 1700,230 1920,270 1920,1080 0,1080" 
+                     fill="url(#mountainMist)" opacity="0.4" />
             
-            {/* Forest */}
-            <polygon points="0,600 200,550 400,580 600,560 800,590 1000,570 1200,580 1200,800 0,800" fill="url(#forestGradient)" />
+            {/* Forest line */}
+            <polygon points="0,650 150,620 300,640 450,630 600,645 750,635 900,650 1050,640 1200,655 1350,645 1500,650 1650,640 1800,655 1920,650 1920,1080 0,1080" 
+                     fill="url(#forestLayer)" opacity="0.8" />
             
-            {/* Lake */}
-            <ellipse cx="600" cy="650" rx="300" ry="80" fill="url(#lakeGradient)" opacity="0.8" />
+            {/* Serene lake */}
+            <ellipse cx="960" cy="780" rx="400" ry="60" fill="url(#waterReflection)" opacity="0.7" />
             
-            {/* Trees */}
-            <circle cx="150" cy="580" r="25" fill="#2F855A" />
-            <circle cx="180" cy="570" r="20" fill="#38A169" />
-            <circle cx="300" cy="590" r="30" fill="#2F855A" />
-            <circle cx="850" cy="585" r="35" fill="#38A169" />
-            <circle cx="900" cy="575" r="25" fill="#2F855A" />
-            <circle cx="1050" cy="580" r="28" fill="#38A169" />
+            {/* Minimal tree elements */}
+            <circle cx="250" cy="630" r="18" fill="#047857" opacity="0.7" />
+            <circle cx="280" cy="625" r="15" fill="#10B981" opacity="0.7" />
+            <circle cx="1400" cy="635" r="20" fill="#047857" opacity="0.7" />
+            <circle cx="1430" cy="630" r="16" fill="#10B981" opacity="0.7" />
             
-            {/* Sun */}
-            <circle cx="950" cy="150" r="60" fill="#FFD700" opacity="0.8" />
-            
-            {/* Clouds */}
-            <ellipse cx="300" cy="120" rx="80" ry="30" fill="white" opacity="0.7" />
-            <ellipse cx="700" cy="100" rx="100" ry="40" fill="white" opacity="0.6" />
-            <ellipse cx="1000" cy="180" rx="70" ry="25" fill="white" opacity="0.5" />
+            {/* Soft sun glow */}
+            <circle cx="1600" cy="200" r="40" fill="#FEF3C7" opacity="0.8" />
+            <circle cx="1600" cy="200" r="60" fill="#FEF3C7" opacity="0.4" />
           </svg>
         </div>
         
-        {/* Overlay for better text readability */}
-        <div className="absolute inset-0 bg-black/20 z-10"></div>
+        {/* Subtle overlay for text contrast */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/15 z-10"></div>
         
         <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
           <motion.div
@@ -208,18 +201,18 @@ export default function Contact() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.3 + index * 0.1 }}
               >
-                <Card className="h-full text-center border-0 bg-white/70 backdrop-blur-lg shadow-xl hover:shadow-2xl hover:bg-white/80 transition-all duration-300 hover:-translate-y-2">
+                <Card className="h-full text-center border-0 bg-black/10 backdrop-blur-[30px] shadow-2xl hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] hover:bg-black/15 transition-all duration-500 hover:-translate-y-3 hover:scale-[1.02]">
                   <CardContent className="p-6">
-                    <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-sky-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                    <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-sky-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-xl">
                       <info.icon className="h-8 w-8 text-white" />
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-3">{info.title}</h3>
+                    <h3 className="text-xl font-bold text-white mb-3 drop-shadow-sm">{info.title}</h3>
                     <div className="space-y-1 mb-3">
                       {info.details.map((detail, i) => (
-                        <div key={i} className="text-gray-800 font-medium">{detail}</div>
+                        <div key={i} className="text-white/90 font-medium drop-shadow-sm">{detail}</div>
                       ))}
                     </div>
-                    <p className="text-sm text-gray-600">{info.subtitle}</p>
+                    <p className="text-sm text-white/75 drop-shadow-sm">{info.subtitle}</p>
                   </CardContent>
                 </Card>
               </motion.div>
