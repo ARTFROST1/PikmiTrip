@@ -5,7 +5,12 @@ import { z } from "zod";
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
+  email: text("email").notNull().unique(),
   password: text("password").notNull(),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  userType: text("user_type").notNull(), // 'traveler' or 'agency'
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const tours = pgTable("tours", {
@@ -38,6 +43,15 @@ export const bookings = pgTable("bookings", {
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
+  username: true,
+  email: true,
+  password: true,
+  firstName: true,
+  lastName: true,
+  userType: true,
+});
+
+export const loginSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
 });

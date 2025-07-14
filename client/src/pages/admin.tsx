@@ -3,6 +3,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Plus, Edit2, Trash2, Eye, Users, TrendingUp } from "lucide-react";
 import Header from "@/components/header";
+import { useAuth } from "@/contexts/AuthContext";
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +23,28 @@ export default function Admin() {
   const [editingTour, setEditingTour] = useState<Tour | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user, isAgency } = useAuth();
+
+  if (!user || !isAgency) {
+    return (
+      <div className="min-h-screen bg-slate-50">
+        <Header />
+        <div className="pt-16 flex items-center justify-center h-96">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">
+              Доступ запрещен
+            </h1>
+            <p className="text-gray-600 mb-8">
+              Эта страница доступна только для турагентств
+            </p>
+            <Link href="/">
+              <Button>Вернуться на главную</Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const { data: tours = [], isLoading: toursLoading } = useQuery<Tour[]>({
     queryKey: ["/api/tours"],

@@ -1,12 +1,24 @@
-# Спонтанные поездки — SaaS платформа для коротких туров
+# Пикми трип — SaaS платформа для спонтанных поездок
 
 ## Overview
 
-This is a Russian travel booking platform called "Спонтанные поездки" (Spontaneous Trips) that allows users to discover, view, and book short tours across Russia. The platform specializes in "hot deals" for weekend trips and spontaneous travel experiences.
+This is a Russian travel booking platform called "Пикми трип" (Pickme Trip) that allows users to discover, view, and book short tours across Russia. The platform specializes in "hot deals" for weekend trips and spontaneous travel experiences. The platform now includes user authentication with two types of users: travelers and travel agencies, each with their own personal dashboards.
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+
+## Recent Changes
+
+### Authentication System Implementation (January 2025)
+- Added user registration and login system with username, email, password, and user type
+- Created AuthContext for managing authentication state
+- Implemented two user types: "traveler" and "agency"
+- Added AuthModal component with beautiful, minimalist design
+- Created user profile page for travelers with booking history and stats
+- Updated header to show different options based on authentication status
+- Admin panel now restricted to agency users only
+- Added logout functionality with proper state cleanup
 
 ## System Architecture
 
@@ -39,25 +51,29 @@ Preferred communication style: Simple, everyday language.
 ### Core Entities
 1. **Tours**: Main product entity with title, description, location, duration, price, capacity, images, ratings, categories, and tags
 2. **Bookings**: User reservations with personal details, tour selection, and booking status
-3. **Users**: Basic user authentication system (minimal implementation)
+3. **Users**: Full user authentication system with username, email, password, first/last name, and user type (traveler/agency)
 
 ### Frontend Components
-- **Header**: Navigation with logo, menu items, and responsive design
+- **Header**: Navigation with logo, menu items, authentication controls, and responsive design
 - **Hero**: Landing section with search functionality and "surprise me" feature
 - **Filters**: Category-based tour filtering (couples, nature, short trips, water activities, etc.)
 - **TourCard**: Individual tour display with images, ratings, pricing, and booking options
 - **BookingModal**: Form for tour reservations with validation
-- **Admin Panel**: Tour management interface for administrators
+- **AuthModal**: Beautiful registration/login modal with user type selection
+- **Admin Panel**: Tour management interface for travel agencies
+- **Profile Page**: Personal dashboard for travelers with booking history and statistics
 
 ### API Endpoints
+- `POST /api/auth/register` - User registration with type selection
+- `POST /api/auth/login` - User authentication
 - `GET /api/tours` - Fetch all tours with optional category and hot deals filtering
 - `GET /api/tours/:id` - Fetch individual tour details
-- `POST /api/tours` - Create new tour (admin)
-- `PUT /api/tours/:id` - Update tour (admin)
-- `DELETE /api/tours/:id` - Delete tour (admin)
-- `GET /api/bookings` - Fetch all bookings (admin)
+- `POST /api/tours` - Create new tour (agency only)
+- `PUT /api/tours/:id` - Update tour (agency only)
+- `DELETE /api/tours/:id` - Delete tour (agency only)
+- `GET /api/bookings` - Fetch all bookings (agency only)
 - `POST /api/bookings` - Create new booking
-- `PUT /api/bookings/:id` - Update booking status (admin)
+- `PUT /api/bookings/:id` - Update booking status (agency only)
 
 ## Data Flow
 

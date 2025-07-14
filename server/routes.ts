@@ -1,11 +1,58 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertTourSchema, insertBookingSchema } from "@shared/schema";
+import { insertTourSchema, insertBookingSchema, insertUserSchema, loginSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
+  // Auth API
+  app.post("/api/auth/register", async (req, res) => {
+    try {
+      const userData = insertUserSchema.parse(req.body);
+      
+      // Check if user already exists
+      const existingUser = await storage.getUserByUsername(userData.username);
+      if (existingUser) {
+        return res.status(400).json({ message: "Пользователь с таким именем уже существует" });
+      }
+      
+      const existingEmail = await storage.getUserByEmail(userData.email);
+      if (existingEmail) {
+        return res.status(400).json({ message: "Пользователь с таким email уже существует" });
+      }
+      
+      const user = await storage.createUser(userData);
+      const { password, ...userWithoutPassword } = user;
+      
+      res.status(201).json(userWithoutPassword);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Неверные данные", errors: error.errors });
+      }
+      res.status(500).json({ message: "Ошибка при регистрации" });
+    }
+  });
+
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { username, password } = loginSchema.parse(req.body);
+      
+      const user = await storage.authenticateUser(username, password);
+      if (!user) {
+        return res.status(401).json({ message: "Неверные учетные данные" });
+      }
+      
+      const { password: _, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Неверные данные", errors: error.errors });
+      }
+      res.status(500).json({ message: "Ошибка при входе" });
+    }
+  });
+
   // Tours API
   app.get("/api/tours", async (req, res) => {
     try {

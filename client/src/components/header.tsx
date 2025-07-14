@@ -1,12 +1,16 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Menu, X, Route } from "lucide-react";
+import { Menu, X, Route, User } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import AuthModal from "@/components/auth-modal";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [location] = useLocation();
+  const { user, isAuthenticated, isAgency, logout } = useAuth();
 
   const navigation = [
     { name: "Туры", href: "/#tours" },
@@ -62,18 +66,45 @@ export default function Header() {
               {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </Button>
             
-            <Link href="/admin">
-              <Button
-                variant="ghost"
-                className="hidden md:block text-gray-600 hover:text-emerald-600"
+            {isAuthenticated ? (
+              <>
+                {isAgency && (
+                  <Link href="/admin">
+                    <Button
+                      variant="ghost"
+                      className="hidden md:block text-gray-600 hover:text-emerald-600"
+                    >
+                      Админ
+                    </Button>
+                  </Link>
+                )}
+                
+                <Link href="/profile">
+                  <Button
+                    variant="ghost"
+                    className="hidden md:flex items-center space-x-2 text-gray-600 hover:text-emerald-600"
+                  >
+                    <User size={16} />
+                    <span>{user?.firstName}</span>
+                  </Button>
+                </Link>
+                
+                <Button
+                  variant="ghost"
+                  className="hidden md:block text-gray-600 hover:text-red-600"
+                  onClick={logout}
+                >
+                  Выйти
+                </Button>
+              </>
+            ) : (
+              <Button 
+                onClick={() => setIsAuthModalOpen(true)}
+                className="hidden md:block bg-gradient-to-r from-emerald-500 to-sky-500 text-white hover:from-emerald-600 hover:to-sky-600 transition-all duration-200 font-medium"
               >
-                Админ
+                Войти
               </Button>
-            </Link>
-            
-            <Button className="hidden md:block bg-gradient-to-r from-emerald-500 to-sky-500 text-white hover:from-emerald-600 hover:to-sky-600 transition-all duration-200 font-medium">
-              Войти
-            </Button>
+            )}
           </div>
         </div>
       </div>
@@ -103,25 +134,63 @@ export default function Header() {
                   {item.name}
                 </a>
               ))}
-              <Link href="/admin">
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start text-gray-600 hover:text-emerald-600"
-                  onClick={() => setIsMenuOpen(false)}
+              
+              {isAuthenticated ? (
+                <>
+                  {isAgency && (
+                    <Link href="/admin">
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start text-gray-600 hover:text-emerald-600"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        Админ
+                      </Button>
+                    </Link>
+                  )}
+                  
+                  <Link href="/profile">
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start text-gray-600 hover:text-emerald-600"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <User size={16} className="mr-2" />
+                      Профиль
+                    </Button>
+                  </Link>
+                  
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start text-gray-600 hover:text-red-600"
+                    onClick={() => {
+                      logout();
+                      setIsMenuOpen(false);
+                    }}
+                  >
+                    Выйти
+                  </Button>
+                </>
+              ) : (
+                <Button 
+                  className="w-full bg-gradient-to-r from-emerald-500 to-sky-500 text-white hover:from-emerald-600 hover:to-sky-600 transition-all duration-200 font-medium"
+                  onClick={() => {
+                    setIsAuthModalOpen(true);
+                    setIsMenuOpen(false);
+                  }}
                 >
-                  Админ
+                  Войти
                 </Button>
-              </Link>
-              <Button 
-                className="w-full bg-gradient-to-r from-emerald-500 to-sky-500 text-white hover:from-emerald-600 hover:to-sky-600 transition-all duration-200 font-medium"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Войти
-              </Button>
+              )}
             </div>
           </motion.div>
         )}
       </AnimatePresence>
+      
+      <AuthModal 
+        isOpen={isAuthModalOpen} 
+        onClose={() => setIsAuthModalOpen(false)} 
+      />
     </motion.header>
   );
 }

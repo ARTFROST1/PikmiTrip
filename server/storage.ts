@@ -4,7 +4,9 @@ export interface IStorage {
   // Users
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  authenticateUser(username: string, password: string): Promise<User | null>;
   
   // Tours
   getTour(id: number): Promise<Tour | undefined>;
@@ -143,9 +145,27 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.currentUserId++;
-    const user: User = { ...insertUser, id };
+    const user: User = { 
+      ...insertUser, 
+      id,
+      createdAt: new Date()
+    };
     this.users.set(id, user);
     return user;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(
+      (user) => user.email === email,
+    );
+  }
+
+  async authenticateUser(username: string, password: string): Promise<User | null> {
+    const user = await this.getUserByUsername(username);
+    if (user && user.password === password) {
+      return user;
+    }
+    return null;
   }
 
   // Tours
@@ -174,7 +194,9 @@ export class MemStorage implements IStorage {
     const tour: Tour = { 
       ...insertTour, 
       id, 
-      createdAt: new Date() 
+      createdAt: new Date(),
+      tags: insertTour.tags || null,
+      isHot: insertTour.isHot || false
     };
     this.tours.set(id, tour);
     return tour;
@@ -214,7 +236,8 @@ export class MemStorage implements IStorage {
       ...insertBooking, 
       id, 
       status: "pending",
-      createdAt: new Date() 
+      createdAt: new Date(),
+      notes: insertBooking.notes || null
     };
     this.bookings.set(id, booking);
     return booking;
