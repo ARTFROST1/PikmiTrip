@@ -19,11 +19,19 @@ import { apiRequest } from "@/lib/queryClient";
 import type { Tour, Booking, InsertTour } from "@shared/schema";
 
 export default function Admin() {
+  const { user, isAgency } = useAuth();
   const [isAddingTour, setIsAddingTour] = useState(false);
   const [editingTour, setEditingTour] = useState<Tour | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { user, isAgency } = useAuth();
+
+  const { data: tours = [], isLoading: toursLoading } = useQuery<Tour[]>({
+    queryKey: ["/api/tours"],
+  });
+
+  const { data: bookings = [], isLoading: bookingsLoading } = useQuery<Booking[]>({
+    queryKey: ["/api/bookings"],
+  });
 
   if (!user || !isAgency) {
     return (
@@ -45,14 +53,6 @@ export default function Admin() {
       </div>
     );
   }
-
-  const { data: tours = [], isLoading: toursLoading } = useQuery<Tour[]>({
-    queryKey: ["/api/tours"],
-  });
-
-  const { data: bookings = [], isLoading: bookingsLoading } = useQuery<Booking[]>({
-    queryKey: ["/api/bookings"],
-  });
 
   const deleteTourMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -202,9 +202,12 @@ export default function Admin() {
                         Добавить тур
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-2xl">
+                    <DialogContent className="max-w-2xl" aria-describedby="add-tour-description">
                       <DialogHeader>
                         <DialogTitle>Добавить новый тур</DialogTitle>
+                        <p id="add-tour-description" className="text-sm text-gray-600">
+                          Заполните форму для создания нового тура
+                        </p>
                       </DialogHeader>
                       <TourForm onClose={() => setIsAddingTour(false)} />
                     </DialogContent>
@@ -361,9 +364,12 @@ export default function Admin() {
 
       {/* Edit Tour Dialog */}
       <Dialog open={!!editingTour} onOpenChange={() => setEditingTour(null)}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl" aria-describedby="edit-tour-description">
           <DialogHeader>
             <DialogTitle>Редактировать тур</DialogTitle>
+            <p id="edit-tour-description" className="text-sm text-gray-600">
+              Измените информацию о туре в форме ниже
+            </p>
           </DialogHeader>
           <TourForm tour={editingTour} onClose={() => setEditingTour(null)} />
         </DialogContent>
@@ -470,8 +476,8 @@ function TourForm({ tour, onClose }: { tour?: Tour | null; onClose: () => void }
           <Input
             id="price"
             type="number"
-            value={formData.price}
-            onChange={(e) => setFormData({ ...formData, price: parseInt(e.target.value) })}
+            value={formData.price || ""}
+            onChange={(e) => setFormData({ ...formData, price: parseInt(e.target.value) || 0 })}
             required
           />
         </div>
@@ -480,8 +486,8 @@ function TourForm({ tour, onClose }: { tour?: Tour | null; onClose: () => void }
           <Input
             id="maxPeople"
             type="number"
-            value={formData.maxPeople}
-            onChange={(e) => setFormData({ ...formData, maxPeople: parseInt(e.target.value) })}
+            value={formData.maxPeople || ""}
+            onChange={(e) => setFormData({ ...formData, maxPeople: parseInt(e.target.value) || 0 })}
             required
           />
         </div>
@@ -521,8 +527,8 @@ function TourForm({ tour, onClose }: { tour?: Tour | null; onClose: () => void }
             type="number"
             min="0"
             max="50"
-            value={formData.rating}
-            onChange={(e) => setFormData({ ...formData, rating: parseInt(e.target.value) })}
+            value={formData.rating || ""}
+            onChange={(e) => setFormData({ ...formData, rating: parseInt(e.target.value) || 0 })}
             required
           />
         </div>
