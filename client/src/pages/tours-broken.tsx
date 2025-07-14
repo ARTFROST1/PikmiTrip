@@ -1,42 +1,48 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  Search, Filter, ArrowUpDown, Grid, List, Star, MapPin, Clock, 
-  Users, Heart, X, Calendar, ChevronDown 
+  Search, 
+  Filter, 
+  Grid, 
+  List, 
+  ArrowUpDown, 
+  MapPin, 
+  Calendar, 
+  Users, 
+  Star,
+  X,
+  ChevronDown
 } from "lucide-react";
-
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
-import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
 import TourCard from "@/components/tour-card";
-import { Tour } from "@/shared/schema";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
+import { Card, CardContent } from "@/components/ui/card";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import type { Tour } from "@shared/schema";
 
 const categories = [
-  { id: "all", name: "Все", icon: "🎯" },
+  { id: "all", name: "Все категории", icon: "🌍" },
   { id: "nature", name: "Природа", icon: "🌲" },
-  { id: "culture", name: "Культура", icon: "🏛️" },
+  { id: "cultural", name: "Культурные", icon: "🏛️" },
   { id: "adventure", name: "Приключения", icon: "🏔️" },
-  { id: "food", name: "Еда", icon: "🍽️" },
-  { id: "couples", name: "Для двоих", icon: "💕" },
+  { id: "coastal", name: "Побережье", icon: "🏖️" },
+  { id: "mountains", name: "Горы", icon: "⛰️" },
+  { id: "couples", name: "Для двоих", icon: "💑" },
   { id: "short", name: "Короткие", icon: "⏰" },
-  { id: "water", name: "Вода", icon: "🌊" },
-  { id: "historical", name: "История", icon: "🏰" },
-  { id: "wellness", name: "Здоровье", icon: "🧘" },
+  { id: "water", name: "Водные", icon: "🌊" },
 ];
 
 const sortOptions = [
   { value: "popular", label: "По популярности" },
-  { value: "price-asc", label: "По возрастанию цены" },
-  { value: "price-desc", label: "По убыванию цены" },
+  { value: "price-asc", label: "По цене (возрастание)" },
+  { value: "price-desc", label: "По цене (убывание)" },
   { value: "rating", label: "По рейтингу" },
   { value: "newest", label: "Новые" },
 ];
@@ -127,7 +133,7 @@ export default function Tours() {
       return true;
     });
 
-    // Sort filtered tours
+    // Sort
     filtered.sort((a, b) => {
       switch (sortBy) {
         case "price-asc":
@@ -137,8 +143,9 @@ export default function Tours() {
         case "rating":
           return b.rating - a.rating;
         case "newest":
-          return b.id - a.id;
-        default: // popular
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        case "popular":
+        default:
           return b.rating - a.rating;
       }
     });
@@ -246,9 +253,9 @@ export default function Tours() {
                         variant="ghost"
                         size="sm"
                         onClick={clearFilters}
-                        className="text-red-500 hover:text-red-700"
+                        className="text-emerald-600 hover:text-emerald-700"
                       >
-                        Сбросить
+                        Очистить
                       </Button>
                     )}
                   </div>
@@ -361,38 +368,37 @@ export default function Tours() {
                   </div>
 
                   <div className="flex items-center space-x-4">
-                    {/* Sort */}
-                    <Select value={sortBy} onValueChange={setSortBy}>
-                      <SelectTrigger className="w-48">
-                        <ArrowUpDown size={16} className="mr-2" />
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {sortOptions.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                  {/* Sort */}
+                  <Select value={sortBy} onValueChange={setSortBy}>
+                    <SelectTrigger className="w-48">
+                      <ArrowUpDown size={16} className="mr-2" />
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {sortOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
 
-                    {/* View Mode */}
-                    <div className="flex items-center border rounded-lg p-1">
-                      <Button
-                        variant={viewMode === "grid" ? "default" : "ghost"}
-                        size="sm"
-                        onClick={() => setViewMode("grid")}
-                      >
-                        <Grid size={16} />
-                      </Button>
-                      <Button
-                        variant={viewMode === "list" ? "default" : "ghost"}
-                        size="sm"
-                        onClick={() => setViewMode("list")}
-                      >
-                        <List size={16} />
-                      </Button>
-                    </div>
+                  {/* View Mode */}
+                  <div className="flex items-center border rounded-lg p-1">
+                    <Button
+                      variant={viewMode === "grid" ? "default" : "ghost"}
+                      size="sm"
+                      onClick={() => setViewMode("grid")}
+                    >
+                      <Grid size={16} />
+                    </Button>
+                    <Button
+                      variant={viewMode === "list" ? "default" : "ghost"}
+                      size="sm"
+                      onClick={() => setViewMode("list")}
+                    >
+                      <List size={16} />
+                    </Button>
                   </div>
                 </div>
                 
@@ -540,19 +546,19 @@ function TourListItem({ tour }: { tour: Tour }) {
                   <span>{tour.location}</span>
                 </div>
                 <div className="flex items-center space-x-1">
-                  <Clock size={16} />
+                  <Calendar size={16} />
                   <span>{tour.duration}</span>
                 </div>
                 <div className="flex items-center space-x-1">
                   <Users size={16} />
-                  <span>до {tour.maxPeople} чел</span>
+                  <span>до {tour.maxPeople} чел.</span>
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-2xl font-bold text-gray-900">
+                <div className="text-2xl font-bold text-gray-900">
                   {tour.price.toLocaleString()} ₽
-                </p>
-                <p className="text-sm text-gray-500">за человека</p>
+                </div>
+                <div className="text-sm text-gray-500">за человека</div>
               </div>
             </div>
           </div>
