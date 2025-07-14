@@ -89,21 +89,86 @@ export default function Contact() {
       <Header />
       
       {/* Hero Section */}
-      <div className="pt-16 bg-gradient-to-br from-emerald-500 via-sky-500 to-purple-600 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+      <div className="pt-16 relative min-h-[70vh] flex items-center justify-center overflow-hidden">
+        {/* Beautiful landscape background with SVG */}
+        <div className="absolute inset-0 z-0">
+          <svg
+            viewBox="0 0 1200 800"
+            className="w-full h-full object-cover"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <defs>
+              <linearGradient id="skyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#87CEEB" />
+                <stop offset="30%" stopColor="#E0F6FF" />
+                <stop offset="100%" stopColor="#FFE4B5" />
+              </linearGradient>
+              <linearGradient id="mountainGradient1" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#4A5568" />
+                <stop offset="100%" stopColor="#2D3748" />
+              </linearGradient>
+              <linearGradient id="mountainGradient2" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#718096" />
+                <stop offset="100%" stopColor="#4A5568" />
+              </linearGradient>
+              <linearGradient id="lakeGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#63B3ED" />
+                <stop offset="100%" stopColor="#3182CE" />
+              </linearGradient>
+              <linearGradient id="forestGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#38A169" />
+                <stop offset="100%" stopColor="#2F855A" />
+              </linearGradient>
+            </defs>
+            
+            {/* Sky */}
+            <rect width="1200" height="800" fill="url(#skyGradient)" />
+            
+            {/* Mountains */}
+            <polygon points="0,400 200,250 400,350 600,200 800,300 1000,150 1200,250 1200,800 0,800" fill="url(#mountainGradient1)" opacity="0.9" />
+            <polygon points="100,500 350,350 550,450 750,300 950,400 1200,350 1200,800 0,800" fill="url(#mountainGradient2)" opacity="0.7" />
+            
+            {/* Forest */}
+            <polygon points="0,600 200,550 400,580 600,560 800,590 1000,570 1200,580 1200,800 0,800" fill="url(#forestGradient)" />
+            
+            {/* Lake */}
+            <ellipse cx="600" cy="650" rx="300" ry="80" fill="url(#lakeGradient)" opacity="0.8" />
+            
+            {/* Trees */}
+            <circle cx="150" cy="580" r="25" fill="#2F855A" />
+            <circle cx="180" cy="570" r="20" fill="#38A169" />
+            <circle cx="300" cy="590" r="30" fill="#2F855A" />
+            <circle cx="850" cy="585" r="35" fill="#38A169" />
+            <circle cx="900" cy="575" r="25" fill="#2F855A" />
+            <circle cx="1050" cy="580" r="28" fill="#38A169" />
+            
+            {/* Sun */}
+            <circle cx="950" cy="150" r="60" fill="#FFD700" opacity="0.8" />
+            
+            {/* Clouds */}
+            <ellipse cx="300" cy="120" rx="80" ry="30" fill="white" opacity="0.7" />
+            <ellipse cx="700" cy="100" rx="100" ry="40" fill="white" opacity="0.6" />
+            <ellipse cx="1000" cy="180" rx="70" ry="25" fill="white" opacity="0.5" />
+          </svg>
+        </div>
+        
+        {/* Overlay for better text readability */}
+        <div className="absolute inset-0 bg-black/20 z-10"></div>
+        
+        <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             className="text-center"
           >
-            <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6">
+            <div className="w-20 h-20 bg-white/30 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
               <Headphones className="h-10 w-10 text-white" />
             </div>
-            <h1 className="text-5xl md:text-6xl font-bold mb-6">
+            <h1 className="text-5xl md:text-6xl font-bold mb-6 text-white drop-shadow-lg">
               Свяжитесь с нами
             </h1>
-            <p className="text-xl md:text-2xl text-white/90 mb-8 max-w-3xl mx-auto">
+            <p className="text-xl md:text-2xl text-white/95 mb-8 max-w-3xl mx-auto drop-shadow-md">
               Мы всегда готовы помочь вам спланировать идеальное путешествие 
               или ответить на любые вопросы
             </p>
@@ -112,8 +177,17 @@ export default function Contact() {
       </div>
 
       {/* Contact Info Section */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-16 relative overflow-hidden">
+        {/* Animated gradient background similar to hero */}
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 via-sky-500/20 to-purple-600/20"></div>
+        <div className="absolute inset-0 bg-gradient-to-tr from-pink-500/10 via-transparent to-cyan-500/10 animate-pulse"></div>
+        <div className="absolute inset-0 opacity-50">
+          <div className="absolute top-0 left-1/4 w-72 h-72 bg-emerald-500/30 rounded-full mix-blend-multiply filter blur-xl animate-blob"></div>
+          <div className="absolute top-0 right-1/4 w-72 h-72 bg-sky-500/30 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-2000"></div>
+          <div className="absolute bottom-0 left-1/3 w-72 h-72 bg-purple-500/30 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-4000"></div>
+        </div>
+        
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -134,18 +208,18 @@ export default function Contact() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.3 + index * 0.1 }}
               >
-                <Card className="h-full text-center border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
+                <Card className="h-full text-center border-0 bg-white/70 backdrop-blur-lg shadow-xl hover:shadow-2xl hover:bg-white/80 transition-all duration-300 hover:-translate-y-2">
                   <CardContent className="p-6">
-                    <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-sky-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-sky-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
                       <info.icon className="h-8 w-8 text-white" />
                     </div>
                     <h3 className="text-xl font-bold text-gray-900 mb-3">{info.title}</h3>
                     <div className="space-y-1 mb-3">
                       {info.details.map((detail, i) => (
-                        <div key={i} className="text-gray-700 font-medium">{detail}</div>
+                        <div key={i} className="text-gray-800 font-medium">{detail}</div>
                       ))}
                     </div>
-                    <p className="text-sm text-gray-500">{info.subtitle}</p>
+                    <p className="text-sm text-gray-600">{info.subtitle}</p>
                   </CardContent>
                 </Card>
               </motion.div>
