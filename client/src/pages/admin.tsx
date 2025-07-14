@@ -17,6 +17,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import type { Tour, Booking, InsertTour } from "@shared/schema";
+import ExtendedTourForm from "@/components/extended-tour-form";
 
 export default function Admin() {
   const { user, isAgency } = useAuth();
@@ -209,7 +210,7 @@ export default function Admin() {
                           Заполните форму для создания нового тура
                         </p>
                       </DialogHeader>
-                      <TourForm onClose={() => setIsAddingTour(false)} />
+                      <ExtendedTourForm onClose={() => setIsAddingTour(false)} />
                     </DialogContent>
                   </Dialog>
                 </div>
@@ -371,7 +372,7 @@ export default function Admin() {
               Измените информацию о туре в форме ниже
             </p>
           </DialogHeader>
-          <TourForm tour={editingTour} onClose={() => setEditingTour(null)} />
+          <ExtendedTourForm tour={editingTour} onClose={() => setEditingTour(null)} />
         </DialogContent>
       </Dialog>
     </div>

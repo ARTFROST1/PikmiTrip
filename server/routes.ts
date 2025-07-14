@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertTourSchema, insertBookingSchema, insertUserSchema, loginSchema } from "@shared/schema";
+import { insertTourSchema, insertBookingSchema, insertUserSchema, insertReviewSchema, loginSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -199,6 +199,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(booking);
     } catch (error) {
       res.status(500).json({ message: "Failed to update booking status" });
+    }
+  });
+
+  // Reviews API
+  app.get("/api/reviews/:tourId", async (req, res) => {
+    try {
+      const tourId = parseInt(req.params.tourId);
+      const reviews = await storage.getReviewsByTour(tourId);
+      res.json(reviews);
+    } catch (error) {
+      res.status(500).json({ message: "Ошибка при получении отзывов" });
+    }
+  });
+
+  app.post("/api/reviews", async (req, res) => {
+    try {
+      const reviewData = insertReviewSchema.parse(req.body);
+      const review = await storage.createReview(reviewData);
+      res.status(201).json(review);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Неверные данные", errors: error.errors });
+      }
+      res.status(500).json({ message: "Ошибка при создании отзыва" });
     }
   });
 

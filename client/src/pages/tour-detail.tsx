@@ -1,14 +1,16 @@
 import { useRoute } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Star, MapPin, Clock, Users, Camera, Heart, Share2 } from "lucide-react";
+import { Star, MapPin, Clock, Users, Camera, Heart, Share2, CheckCircle, XCircle, Route } from "lucide-react";
 import { useState } from "react";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
 import BookingModal from "@/components/booking-modal";
+import TourReviews from "@/components/tour-reviews";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Tour } from "@shared/schema";
 
 export default function TourDetail() {
@@ -41,18 +43,18 @@ export default function TourDetail() {
     return (
       <div className="min-h-screen bg-slate-50">
         <Header />
-        <div className="pt-16 flex items-center justify-center h-96">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">
-              Тур не найден
-            </h1>
-            <p className="text-gray-600 mb-8">
-              Возможно, тур был удален или URL неверный
-            </p>
-            <Button onClick={() => window.history.back()}>
-              Вернуться назад
-            </Button>
-          </div>
+        <div className="pt-16 max-w-4xl mx-auto px-4 py-8 text-center">
+          <div className="text-6xl mb-4">🏔️</div>
+          <h1 className="text-2xl font-bold mb-4">Тур не найден</h1>
+          <p className="text-gray-600 mb-8">
+            Запрашиваемый тур не существует или был удалён.
+          </p>
+          <Button
+            onClick={() => window.history.back()}
+            variant="outline"
+          >
+            Вернуться назад
+          </Button>
         </div>
       </div>
     );
@@ -124,166 +126,230 @@ export default function TourDetail() {
         >
           {/* Main content */}
           <div className="lg:col-span-2">
-            <Card className="mb-6">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1">
-                      <Star className="h-5 w-5 text-yellow-400 fill-current" />
-                      <span className="font-semibold text-gray-900">
-                        {(tour.rating / 10).toFixed(1)}
-                      </span>
-                    </div>
-                    <span className="text-gray-500">•</span>
-                    <span className="text-gray-600">127 отзывов</span>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-gray-900">
-                      ₽{tour.price.toLocaleString()}
-                    </div>
-                    <div className="text-sm text-gray-500">за {tour.maxPeople <= 2 ? 'двоих' : 'группу'}</div>
-                  </div>
-                </div>
-                
-                <h3 className="text-xl font-bold text-gray-900 mb-4">
-                  О путешествии
-                </h3>
-                <p className="text-gray-600 mb-6">
-                  {tour.description}
-                </p>
-                
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                  <div className="bg-gradient-to-br from-emerald-50 to-sky-50 p-4 rounded-lg">
-                    <h4 className="font-semibold text-gray-900 mb-2">Включено</h4>
-                    <ul className="text-sm text-gray-600 space-y-1">
-                      <li>• Проживание в отеле</li>
-                      <li>• Трансфер туда-обратно</li>
-                      <li>• Экскурсии</li>
-                      <li>• Завтраки</li>
-                    </ul>
-                  </div>
-                  <div className="bg-gradient-to-br from-orange-50 to-pink-50 p-4 rounded-lg">
-                    <h4 className="font-semibold text-gray-900 mb-2">Не включено</h4>
-                    <ul className="text-sm text-gray-600 space-y-1">
-                      <li>• Обеды и ужины</li>
-                      <li>• Личные расходы</li>
-                      <li>• Сувениры</li>
-                      <li>• Страховка</li>
-                    </ul>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <Tabs defaultValue="overview" className="w-full">
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="overview">Обзор</TabsTrigger>
+                <TabsTrigger value="program">Программа</TabsTrigger>
+                <TabsTrigger value="route">Маршрут</TabsTrigger>
+                <TabsTrigger value="reviews">Отзывы</TabsTrigger>
+              </TabsList>
 
-            {/* Program */}
-            <Card className="mb-6">
-              <CardContent className="p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-4">
-                  Программа тура
-                </h3>
-                
-                <div className="space-y-4">
-                  <div className="border-l-4 border-emerald-500 pl-4">
-                    <h4 className="font-semibold text-gray-900">День 1</h4>
-                    <p className="text-gray-600">
-                      Прибытие, размещение в отеле, знакомство с группой. 
-                      Вечером - прогулка по центру города.
-                    </p>
-                  </div>
-                  
-                  <div className="border-l-4 border-sky-500 pl-4">
-                    <h4 className="font-semibold text-gray-900">День 2</h4>
-                    <p className="text-gray-600">
-                      Основная экскурсионная программа. Посещение главных 
-                      достопримечательностей, обед на природе.
-                    </p>
-                  </div>
-                  
-                  {tour.duration.includes("3 дня") && (
-                    <div className="border-l-4 border-orange-500 pl-4">
-                      <h4 className="font-semibold text-gray-900">День 3</h4>
-                      <p className="text-gray-600">
-                        Дополнительные активности, свободное время, 
-                        трансфер к месту отправления.
-                      </p>
+              <TabsContent value="overview" className="space-y-6">
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1">
+                          <Star className="h-5 w-5 text-yellow-400 fill-current" />
+                          <span className="font-semibold text-gray-900">
+                            {(tour.rating / 10).toFixed(1)}
+                          </span>
+                        </div>
+                        <span className="text-gray-500">•</span>
+                        <span className="text-gray-600">Рейтинг на основе отзывов</span>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-2xl font-bold text-gray-900">
+                          ₽{tour.price.toLocaleString()}
+                        </div>
+                        <div className="text-sm text-gray-500">за человека</div>
+                      </div>
                     </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Map placeholder */}
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-4">
-                  Маршрут на карте
-                </h3>
-                <div className="w-full h-64 bg-gradient-to-br from-emerald-100 to-sky-100 rounded-lg flex items-center justify-center">
-                  <div className="text-center">
-                    <MapPin className="h-12 w-12 text-emerald-600 mx-auto mb-2" />
-                    <p className="text-gray-600">
-                      Интерактивная карта маршрута
+                    
+                    <h3 className="text-xl font-bold text-gray-900 mb-4">
+                      О путешествии
+                    </h3>
+                    <p className="text-gray-600 mb-6">
+                      {tour.description}
                     </p>
-                  </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-gray-900 mb-1">
+                          {tour.duration}
+                        </div>
+                        <div className="text-sm text-gray-600">Продолжительность</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-gray-900 mb-1">
+                          {tour.maxPeople}
+                        </div>
+                        <div className="text-sm text-gray-600">Макс. участников</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-gray-900 mb-1">
+                          {(tour.rating / 10).toFixed(1)}
+                        </div>
+                        <div className="text-sm text-gray-600">Рейтинг</div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Included/Excluded */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Card>
+                    <CardContent className="p-6">
+                      <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                        <CheckCircle className="h-5 w-5 text-green-600" />
+                        Что включено
+                      </h3>
+                      <div className="space-y-2">
+                        {tour.included?.map((item, index) => (
+                          <div key={index} className="flex items-center gap-2 text-sm">
+                            <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                            <span>{item}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardContent className="p-6">
+                      <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                        <XCircle className="h-5 w-5 text-red-600" />
+                        Что не включено
+                      </h3>
+                      <div className="space-y-2">
+                        {tour.excluded?.map((item, index) => (
+                          <div key={index} className="flex items-center gap-2 text-sm">
+                            <XCircle className="h-4 w-4 text-red-600 flex-shrink-0" />
+                            <span>{item}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
-              </CardContent>
-            </Card>
+              </TabsContent>
+
+              <TabsContent value="program" className="space-y-6">
+                <Card>
+                  <CardContent className="p-6">
+                    <h3 className="font-semibold text-lg mb-4">Программа тура</h3>
+                    <div className="prose max-w-none">
+                      <pre className="whitespace-pre-wrap text-sm text-gray-700 font-sans">
+                        {tour.program}
+                      </pre>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="route" className="space-y-6">
+                <Card>
+                  <CardContent className="p-6">
+                    <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                      <Route className="h-5 w-5 text-blue-600" />
+                      Маршрут на карте
+                    </h3>
+                    {tour.route ? (
+                      <div className="space-y-4">
+                        <div className="bg-blue-50 p-4 rounded-lg">
+                          <p className="text-sm text-gray-600 mb-3">Основные точки маршрута:</p>
+                          <div className="space-y-2">
+                            {(() => {
+                              try {
+                                const routePoints = JSON.parse(tour.route);
+                                return routePoints.map((point: any, index: number) => (
+                                  <div key={index} className="flex items-center gap-2">
+                                    <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                                      {index + 1}
+                                    </div>
+                                    <span className="font-medium">{point.name}</span>
+                                    <span className="text-sm text-gray-500">
+                                      ({point.lat.toFixed(4)}, {point.lng.toFixed(4)})
+                                    </span>
+                                  </div>
+                                ));
+                              } catch (error) {
+                                return <p className="text-gray-500">Некорректный формат маршрута</p>;
+                              }
+                            })()}
+                          </div>
+                        </div>
+                        <div className="bg-gray-100 p-4 rounded-lg text-center">
+                          <p className="text-sm text-gray-600">
+                            Интеграция с Яндекс.Картами будет доступна в следующих обновлениях
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-gray-500">Маршрут не указан</p>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="reviews" className="space-y-6">
+                <TourReviews tourId={tour.id} />
+              </TabsContent>
+            </Tabs>
           </div>
 
           {/* Booking sidebar */}
           <div className="lg:col-span-1">
-            <Card className="sticky top-24">
+            <Card className="sticky top-4">
               <CardContent className="p-6">
                 <div className="text-center mb-6">
-                  <div className="text-3xl font-bold text-gray-900 mb-2">
+                  <div className="text-3xl font-bold text-gray-900 mb-1">
                     ₽{tour.price.toLocaleString()}
                   </div>
-                  <div className="text-gray-500">
-                    за {tour.maxPeople <= 2 ? 'двоих' : 'группу'}
-                  </div>
+                  <div className="text-sm text-gray-500">за человека</div>
                 </div>
                 
-                <div className="space-y-4 mb-6">
-                  <div className="flex items-center justify-between py-2 border-b">
-                    <span className="text-gray-600">Продолжительность</span>
-                    <span className="font-semibold">{tour.duration}</span>
-                  </div>
-                  <div className="flex items-center justify-between py-2 border-b">
-                    <span className="text-gray-600">Макс. человек</span>
-                    <span className="font-semibold">{tour.maxPeople}</span>
-                  </div>
-                  <div className="flex items-center justify-between py-2 border-b">
-                    <span className="text-gray-600">Рейтинг</span>
-                    <div className="flex items-center gap-1">
-                      <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                      <span className="font-semibold">{(tour.rating / 10).toFixed(1)}</span>
-                    </div>
-                  </div>
-                </div>
-                
-                <Button 
+                <Button
                   onClick={() => setShowBookingModal(true)}
-                  className="w-full bg-gradient-to-r from-emerald-500 to-sky-500 hover:from-emerald-600 hover:to-sky-600 text-white font-semibold py-3 rounded-xl transition-all duration-200 transform hover:scale-105"
+                  className="w-full mb-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+                  size="lg"
                 >
-                  Забронировать
+                  Забронировать тур
                 </Button>
                 
-                <div className="mt-4 text-center text-sm text-gray-500">
-                  Бесплатная отмена до 24 часов
+                <div className="space-y-3 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600">Локация:</span>
+                    <span className="font-medium">{tour.location}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600">Продолжительность:</span>
+                    <span className="font-medium">{tour.duration}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600">Группа:</span>
+                    <span className="font-medium">до {tour.maxPeople} человек</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-600">Категория:</span>
+                    <span className="font-medium">{tour.category}</span>
+                  </div>
+                </div>
+                
+                <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <span className="text-sm font-medium">Быстрое бронирование</span>
+                  </div>
+                  <p className="text-xs text-gray-600">
+                    Подтверждение в течение 24 часов
+                  </p>
                 </div>
               </CardContent>
             </Card>
           </div>
         </motion.div>
       </div>
-
-      <BookingModal 
-        tour={tour}
-        isOpen={showBookingModal}
-        onClose={() => setShowBookingModal(false)}
-      />
       
       <Footer />
+      
+      {showBookingModal && (
+        <BookingModal
+          tour={tour}
+          isOpen={showBookingModal}
+          onClose={() => setShowBookingModal(false)}
+        />
+      )}
     </div>
   );
 }

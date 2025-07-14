@@ -1,4 +1,4 @@
-import { users, tours, bookings, type User, type InsertUser, type Tour, type InsertTour, type Booking, type InsertBooking } from "@shared/schema";
+import { users, tours, bookings, reviews, type User, type InsertUser, type Tour, type InsertTour, type Booking, type InsertBooking, type Review, type InsertReview } from "@shared/schema";
 
 export interface IStorage {
   // Users
@@ -23,23 +23,33 @@ export interface IStorage {
   getBookingsByTour(tourId: number): Promise<Booking[]>;
   createBooking(booking: InsertBooking): Promise<Booking>;
   updateBookingStatus(id: number, status: string): Promise<Booking | undefined>;
+  
+  // Reviews
+  getReview(id: number): Promise<Review | undefined>;
+  getReviewsByTour(tourId: number): Promise<Review[]>;
+  createReview(review: InsertReview): Promise<Review>;
+  updateTourRating(tourId: number): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
   private users: Map<number, User>;
   private tours: Map<number, Tour>;
   private bookings: Map<number, Booking>;
+  private reviews: Map<number, Review>;
   private currentUserId: number;
   private currentTourId: number;
   private currentBookingId: number;
+  private currentReviewId: number;
 
   constructor() {
     this.users = new Map();
     this.tours = new Map();
     this.bookings = new Map();
+    this.reviews = new Map();
     this.currentUserId = 1;
     this.currentTourId = 1;
     this.currentBookingId = 1;
+    this.currentReviewId = 1;
     
     // Initialize with sample tours
     this.initializeSampleTours();
@@ -55,10 +65,16 @@ export class MemStorage implements IStorage {
         price: 12500,
         maxPeople: 4,
         imageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600",
-        rating: 48,
         category: "nature",
         tags: ["природа", "озера", "карелия"],
         isHot: true,
+        included: ["Трансфер", "Проживание", "Завтрак", "Экскурсовод"],
+        excluded: ["Обед", "Ужин", "Личные расходы"],
+        program: "День 1: Прибытие в Петрозаводск, размещение, обзорная экскурсия\nДень 2: Поездка к озерам, пикник, возвращение",
+        route: JSON.stringify([
+          { lat: 61.7849, lng: 34.3469, name: "Петрозаводск" },
+          { lat: 61.9026, lng: 34.1372, name: "Кижи" }
+        ]),
       },
       {
         title: "Алтайские горы",
@@ -68,10 +84,16 @@ export class MemStorage implements IStorage {
         price: 18900,
         maxPeople: 2,
         imageUrl: "https://images.unsplash.com/photo-1464822759844-d150b9f4c1a8?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600",
-        rating: 49,
         category: "mountains",
         tags: ["горы", "алтай", "активный отдых"],
         isHot: false,
+        included: ["Трансфер", "Проживание", "Трёхразовое питание", "Гид", "Снаряжение"],
+        excluded: ["Алкоголь", "Сувениры", "Медицинская страховка"],
+        program: "День 1: Прибытие, размещение, знакомство с группой\nДень 2: Треккинг к горному озеру, пикник\nДень 3: Восхождение на смотровую площадку, возвращение",
+        route: JSON.stringify([
+          { lat: 51.9581, lng: 85.9603, name: "Горно-Алтайск" },
+          { lat: 50.4547, lng: 87.7506, name: "Белуха" }
+        ]),
       },
       {
         title: "Куршская коса",
@@ -128,7 +150,13 @@ export class MemStorage implements IStorage {
     ];
 
     sampleTours.forEach(tour => {
-      this.createTour(tour);
+      this.tours.set(this.currentTourId, { 
+        ...tour, 
+        id: this.currentTourId, 
+        rating: 40, // Default rating
+        createdAt: new Date() 
+      });
+      this.currentTourId++;
     });
   }
 
@@ -194,6 +222,7 @@ export class MemStorage implements IStorage {
     const tour: Tour = { 
       ...insertTour, 
       id, 
+      rating: 40, // Default rating 
       createdAt: new Date(),
       tags: insertTour.tags || null,
       isHot: insertTour.isHot || false
@@ -250,6 +279,46 @@ export class MemStorage implements IStorage {
     const updatedBooking = { ...existingBooking, status };
     this.bookings.set(id, updatedBooking);
     return updatedBooking;
+  }
+
+  // Reviews
+  async getReview(id: number): Promise<Review | undefined> {
+    return this.reviews.get(id);
+  }
+
+  async getReviewsByTour(tourId: number): Promise<Review[]> {
+    return Array.from(this.reviews.values()).filter(
+      (review) => review.tourId === tourId,
+    );
+  }
+
+  async createReview(insertReview: InsertReview): Promise<Review> {
+    const id = this.currentReviewId++;
+    const review: Review = { 
+      ...insertReview, 
+      id, 
+      createdAt: new Date()
+    };
+    this.reviews.set(id, review);
+    
+    // Update tour rating based on reviews
+    await this.updateTourRating(insertReview.tourId);
+    
+    return review;
+  }
+
+  async updateTourRating(tourId: number): Promise<void> {
+    const reviews = await this.getReviewsByTour(tourId);
+    if (reviews.length === 0) return;
+
+    const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
+    const avgRating = Math.round((totalRating / reviews.length) * 10); // Convert to 0-50 scale
+    
+    const tour = this.tours.get(tourId);
+    if (tour) {
+      tour.rating = avgRating;
+      this.tours.set(tourId, tour);
+    }
   }
 }
 
