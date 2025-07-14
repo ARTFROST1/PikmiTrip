@@ -13,7 +13,7 @@ export default function Header() {
   const { user, isAuthenticated, isAgency, logout } = useAuth();
 
   const navigation = [
-    { name: "Туры", href: "/#tours" },
+    { name: "Туры", href: "/tours" },
     { name: "О нас", href: "/#about" },
     { name: "Контакты", href: "/#contact" },
   ];

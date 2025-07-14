@@ -4,6 +4,7 @@ import { Search, MapPin, Calendar, Users, Sparkles, Zap, ChevronDown } from "luc
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "wouter";
 import type { Tour } from "@shared/schema";
 
 export default function Hero() {
@@ -130,10 +131,12 @@ export default function Hero() {
                 className="bg-transparent text-white placeholder-white/70 border-0 outline-none flex-1 font-medium"
               />
             </div>
-            <Button className="bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-xl p-4 font-semibold hover:from-orange-600 hover:to-pink-600 transition-all duration-200 transform hover:scale-105">
-              <Search className="mr-2" size={20} />
-              Найти
-            </Button>
+            <Link href="/tours">
+              <Button className="bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-xl p-4 font-semibold hover:from-orange-600 hover:to-pink-600 transition-all duration-200 transform hover:scale-105">
+                <Search className="mr-2" size={20} />
+                Найти
+              </Button>
+            </Link>
           </div>
         </motion.div>
         
