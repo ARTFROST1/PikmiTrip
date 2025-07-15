@@ -213,4 +213,244 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
-export const storage = new DatabaseStorage();
+// Use in-memory storage for development when DATABASE_URL is not available
+import { db } from "./db";
+
+// Create a MemStorage class for development
+export class MemStorage implements IStorage {
+  private users: Map<string, User> = new Map();
+  private tours: Map<number, Tour> = new Map();
+  private bookings: Map<number, Booking> = new Map();
+  private reviews: Map<number, Review> = new Map();
+  private favorites: Map<string, Favorite> = new Map();
+  private currentTourId: number = 1;
+  private currentBookingId: number = 1;
+  private currentReviewId: number = 1;
+  private currentFavoriteId: number = 1;
+
+  constructor() {
+    this.initializeSampleTours();
+  }
+
+  private initializeSampleTours() {
+    const sampleTours: Tour[] = [
+      {
+        id: 1,
+        title: "Поездка в Сочи",
+        description: "Отличный отдых на черноморском побережье",
+        location: "Сочи, Россия",
+        duration: "3 дня",
+        price: 15000,
+        capacity: 20,
+        images: ["/api/placeholder/400/300"],
+        rating: 4.8,
+        categories: ["nature", "couples"],
+        tags: ["beach", "mountains", "resort"],
+        isHot: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        id: 2,
+        title: "Экскурсия по Санкт-Петербургу",
+        description: "Культурная программа в северной столице",
+        location: "Санкт-Петербург, Россия",
+        duration: "2 дня",
+        price: 12000,
+        capacity: 15,
+        images: ["/api/placeholder/400/300"],
+        rating: 4.9,
+        categories: ["culture", "history"],
+        tags: ["museums", "architecture", "culture"],
+        isHot: false,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    ];
+
+    sampleTours.forEach(tour => {
+      this.tours.set(tour.id, tour);
+      this.currentTourId = Math.max(this.currentTourId, tour.id + 1);
+    });
+  }
+
+  // User operations
+  async getUser(id: string): Promise<User | undefined> {
+    return this.users.get(id);
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    for (const user of this.users.values()) {
+      if (user.email === email) return user;
+    }
+    return undefined;
+  }
+
+  async getUserByGoogleId(googleId: string): Promise<User | undefined> {
+    for (const user of this.users.values()) {
+      if (user.googleId === googleId) return user;
+    }
+    return undefined;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const user: User = {
+      id: insertUser.id || `user_${Date.now()}`,
+      ...insertUser,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.users.set(user.id, user);
+    return user;
+  }
+
+  async updateUser(id: string, userUpdate: Partial<InsertUser>): Promise<User | undefined> {
+    const user = this.users.get(id);
+    if (!user) return undefined;
+
+    const updatedUser = { ...user, ...userUpdate, updatedAt: new Date() };
+    this.users.set(id, updatedUser);
+    return updatedUser;
+  }
+
+  // Tour operations
+  async getTour(id: number): Promise<Tour | undefined> {
+    return this.tours.get(id);
+  }
+
+  async getAllTours(): Promise<Tour[]> {
+    return Array.from(this.tours.values());
+  }
+
+  async getToursByCategory(category: string): Promise<Tour[]> {
+    return Array.from(this.tours.values()).filter(tour => 
+      tour.categories.includes(category)
+    );
+  }
+
+  async getHotTours(): Promise<Tour[]> {
+    return Array.from(this.tours.values()).filter(tour => tour.isHot);
+  }
+
+  async createTour(insertTour: InsertTour): Promise<Tour> {
+    const tour: Tour = {
+      id: this.currentTourId++,
+      ...insertTour,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.tours.set(tour.id, tour);
+    return tour;
+  }
+
+  async updateTour(id: number, tourUpdate: Partial<InsertTour>): Promise<Tour | undefined> {
+    const tour = this.tours.get(id);
+    if (!tour) return undefined;
+
+    const updatedTour = { ...tour, ...tourUpdate, updatedAt: new Date() };
+    this.tours.set(id, updatedTour);
+    return updatedTour;
+  }
+
+  async deleteTour(id: number): Promise<boolean> {
+    return this.tours.delete(id);
+  }
+
+  // Booking operations
+  async getBooking(id: number): Promise<Booking | undefined> {
+    return this.bookings.get(id);
+  }
+
+  async getAllBookings(): Promise<Booking[]> {
+    return Array.from(this.bookings.values());
+  }
+
+  async getBookingsByTour(tourId: number): Promise<Booking[]> {
+    return Array.from(this.bookings.values()).filter(booking => booking.tourId === tourId);
+  }
+
+  async createBooking(insertBooking: InsertBooking): Promise<Booking> {
+    const booking: Booking = {
+      id: this.currentBookingId++,
+      ...insertBooking,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.bookings.set(booking.id, booking);
+    return booking;
+  }
+
+  async updateBookingStatus(id: number, status: string): Promise<Booking | undefined> {
+    const booking = this.bookings.get(id);
+    if (!booking) return undefined;
+
+    const updatedBooking = { ...booking, status, updatedAt: new Date() };
+    this.bookings.set(id, updatedBooking);
+    return updatedBooking;
+  }
+
+  // Review operations
+  async getReview(id: number): Promise<Review | undefined> {
+    return this.reviews.get(id);
+  }
+
+  async getReviewsByTour(tourId: number): Promise<Review[]> {
+    return Array.from(this.reviews.values()).filter(review => review.tourId === tourId);
+  }
+
+  async createReview(insertReview: InsertReview, userId: string): Promise<Review> {
+    const review: Review = {
+      id: this.currentReviewId++,
+      ...insertReview,
+      userId,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.reviews.set(review.id, review);
+    
+    // Update tour rating
+    await this.updateTourRating(insertReview.tourId);
+    
+    return review;
+  }
+
+  async updateTourRating(tourId: number): Promise<void> {
+    const reviews = await this.getReviewsByTour(tourId);
+    if (reviews.length === 0) return;
+
+    const avgRating = reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length;
+    const tour = this.tours.get(tourId);
+    if (tour) {
+      tour.rating = Math.round(avgRating * 10) / 10;
+      this.tours.set(tourId, tour);
+    }
+  }
+
+  // Favorites operations
+  async getUserFavorites(userId: string): Promise<Favorite[]> {
+    return Array.from(this.favorites.values()).filter(favorite => favorite.userId === userId);
+  }
+
+  async addFavorite(userId: string, tourId: number): Promise<Favorite> {
+    const favorite: Favorite = {
+      id: this.currentFavoriteId++,
+      userId,
+      tourId,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.favorites.set(`${userId}_${tourId}`, favorite);
+    return favorite;
+  }
+
+  async removeFavorite(userId: string, tourId: number): Promise<boolean> {
+    return this.favorites.delete(`${userId}_${tourId}`);
+  }
+
+  async isFavorite(userId: string, tourId: number): Promise<boolean> {
+    return this.favorites.has(`${userId}_${tourId}`);
+  }
+}
+
+// Choose storage implementation based on environment
+export const storage = db ? new DatabaseStorage() : new MemStorage();
