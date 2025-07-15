@@ -1,5 +1,4 @@
 import { eq, and } from "drizzle-orm";
-import { db } from "./db";
 import {
   users,
   tours,
@@ -8,6 +7,7 @@ import {
   favorites,
   type User,
   type InsertUser,
+  type UpsertUser,
   type Tour,
   type InsertTour,
   type Booking,
@@ -19,12 +19,13 @@ import {
 } from "@shared/schema";
 
 export interface IStorage {
-  // Users (for multiple auth providers) - using string IDs for Replit Auth compatibility
+  // Users (for Replit Auth and Google OAuth)
   getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   getUserByGoogleId(googleId: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, user: Partial<InsertUser>): Promise<User | undefined>;
+  upsertUser(user: UpsertUser): Promise<User>;
   
   // Tours
   getTour(id: number): Promise<Tour | undefined>;
@@ -82,6 +83,30 @@ export class DatabaseStorage implements IStorage {
       .update(users)
       .set({ ...userUpdate, updatedAt: new Date() })
       .where(eq(users.id, id))
+      .returning();
+    return user;
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values({
+        ...userData,
+        email: userData.email || null,
+        firstName: userData.firstName || null,
+        lastName: userData.lastName || null,
+        profileImageUrl: userData.profileImageUrl || null,
+        userType: userData.userType || "traveler",
+        stripeCustomerId: userData.stripeCustomerId || null,
+        stripeSubscriptionId: userData.stripeSubscriptionId || null,
+      })
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
       .returning();
     return user;
   }
@@ -213,7 +238,7 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
-// Use in-memory storage for development when DATABASE_URL is not available
+// Import db after interface definition to avoid circular imports
 import { db } from "./db";
 
 // Create a MemStorage class for development
@@ -233,7 +258,7 @@ export class MemStorage implements IStorage {
   }
 
   private initializeSampleTours() {
-    const sampleTours: Tour[] = [
+    const sampleTours: any[] = [
       {
         id: 1,
         title: "Поездка в Сочи",
@@ -241,14 +266,13 @@ export class MemStorage implements IStorage {
         location: "Сочи, Россия",
         duration: "3 дня",
         price: 15000,
-        capacity: 20,
-        images: ["/api/placeholder/400/300"],
+        maxPeople: 20,
+        imageUrl: "/api/placeholder/400/300",
         rating: 4.8,
-        categories: ["nature", "couples"],
+        category: "nature",
         tags: ["beach", "mountains", "resort"],
         isHot: true,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        createdAt: new Date()
       },
       {
         id: 2,
@@ -257,14 +281,13 @@ export class MemStorage implements IStorage {
         location: "Санкт-Петербург, Россия",
         duration: "2 дня",
         price: 12000,
-        capacity: 15,
-        images: ["/api/placeholder/400/300"],
+        maxPeople: 15,
+        imageUrl: "/api/placeholder/400/300",
         rating: 4.9,
-        categories: ["culture", "history"],
+        category: "culture",
         tags: ["museums", "architecture", "culture"],
         isHot: false,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        createdAt: new Date()
       }
     ];
 
@@ -280,28 +303,60 @@ export class MemStorage implements IStorage {
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    for (const user of this.users.values()) {
-      if (user.email === email) return user;
-    }
-    return undefined;
+    const usersArray = Array.from(this.users.values());
+    return usersArray.find(user => user.email === email);
   }
 
   async getUserByGoogleId(googleId: string): Promise<User | undefined> {
-    for (const user of this.users.values()) {
-      if (user.googleId === googleId) return user;
-    }
-    return undefined;
+    const usersArray = Array.from(this.users.values());
+    return usersArray.find(user => user.googleId === googleId);
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const user: User = {
       id: insertUser.id || `user_${Date.now()}`,
-      ...insertUser,
+      email: insertUser.email,
+      password: insertUser.password || null,
+      firstName: insertUser.firstName || null,
+      lastName: insertUser.lastName || null,
+      profileImageUrl: insertUser.profileImageUrl || null,
+      userType: insertUser.userType || "traveler",
+      authProvider: insertUser.authProvider || "local",
+      googleId: insertUser.googleId || null,
+      stripeCustomerId: insertUser.stripeCustomerId || null,
+      stripeSubscriptionId: insertUser.stripeSubscriptionId || null,
       createdAt: new Date(),
       updatedAt: new Date()
     };
     this.users.set(user.id, user);
     return user;
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const existingUser = this.users.get(userData.id);
+    if (existingUser) {
+      const updatedUser = { ...existingUser, ...userData, updatedAt: new Date() };
+      this.users.set(userData.id, updatedUser);
+      return updatedUser;
+    } else {
+      const newUser: User = {
+        id: userData.id,
+        email: userData.email || "",
+        password: null,
+        firstName: userData.firstName || null,
+        lastName: userData.lastName || null,
+        profileImageUrl: userData.profileImageUrl || null,
+        userType: "traveler",
+        authProvider: "replit",
+        googleId: null,
+        stripeCustomerId: null,
+        stripeSubscriptionId: null,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      this.users.set(userData.id, newUser);
+      return newUser;
+    }
   }
 
   async updateUser(id: string, userUpdate: Partial<InsertUser>): Promise<User | undefined> {
@@ -324,7 +379,7 @@ export class MemStorage implements IStorage {
 
   async getToursByCategory(category: string): Promise<Tour[]> {
     return Array.from(this.tours.values()).filter(tour => 
-      tour.categories.includes(category)
+      tour.category === category
     );
   }
 
@@ -333,11 +388,10 @@ export class MemStorage implements IStorage {
   }
 
   async createTour(insertTour: InsertTour): Promise<Tour> {
-    const tour: Tour = {
+    const tour: any = {
       id: this.currentTourId++,
       ...insertTour,
-      createdAt: new Date(),
-      updatedAt: new Date()
+      createdAt: new Date()
     };
     this.tours.set(tour.id, tour);
     return tour;
@@ -370,11 +424,10 @@ export class MemStorage implements IStorage {
   }
 
   async createBooking(insertBooking: InsertBooking): Promise<Booking> {
-    const booking: Booking = {
+    const booking: any = {
       id: this.currentBookingId++,
       ...insertBooking,
-      createdAt: new Date(),
-      updatedAt: new Date()
+      createdAt: new Date()
     };
     this.bookings.set(booking.id, booking);
     return booking;
@@ -399,12 +452,11 @@ export class MemStorage implements IStorage {
   }
 
   async createReview(insertReview: InsertReview, userId: string): Promise<Review> {
-    const review: Review = {
+    const review: any = {
       id: this.currentReviewId++,
       ...insertReview,
       userId,
-      createdAt: new Date(),
-      updatedAt: new Date()
+      createdAt: new Date()
     };
     this.reviews.set(review.id, review);
     
@@ -432,12 +484,11 @@ export class MemStorage implements IStorage {
   }
 
   async addFavorite(userId: string, tourId: number): Promise<Favorite> {
-    const favorite: Favorite = {
+    const favorite: any = {
       id: this.currentFavoriteId++,
       userId,
       tourId,
-      createdAt: new Date(),
-      updatedAt: new Date()
+      createdAt: new Date()
     };
     this.favorites.set(`${userId}_${tourId}`, favorite);
     return favorite;

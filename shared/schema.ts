@@ -87,6 +87,7 @@ export const favorites = pgTable("favorites", {
 // Replit Auth compatible types
 export type InsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
+export type UpsertUser = typeof users.$inferInsert;
 
 export const insertTourSchema = createInsertSchema(tours).omit({
   id: true,
