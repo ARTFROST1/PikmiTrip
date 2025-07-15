@@ -1,170 +1,105 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertTourSchema, insertBookingSchema, insertUserSchema, insertReviewSchema, loginSchema } from "@shared/schema";
+import { insertTourSchema, insertBookingSchema, insertReviewSchema } from "@shared/schema";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  
-  // Auth API
-  app.post("/api/auth/register", async (req, res) => {
-    try {
-      const userData = insertUserSchema.parse(req.body);
-      
-      // Check if user already exists
-      const existingUser = await storage.getUserByUsername(userData.username);
-      if (existingUser) {
-        return res.status(400).json({ message: "Пользователь с таким именем уже существует" });
-      }
-      
-      const existingEmail = await storage.getUserByEmail(userData.email);
-      if (existingEmail) {
-        return res.status(400).json({ message: "Пользователь с таким email уже существует" });
-      }
-      
-      const user = await storage.createUser(userData);
-      const { password, ...userWithoutPassword } = user;
-      
-      res.status(201).json(userWithoutPassword);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Неверные данные", errors: error.errors });
-      }
-      res.status(500).json({ message: "Ошибка при регистрации" });
-    }
+  // Skip auth setup for now to test basic functionality
+  // await setupAuth(app);
+
+  // Temporary auth route without authentication
+  app.get('/api/auth/user', async (req: any, res) => {
+    // Return null for now - user not authenticated
+    res.json(null);
   });
 
-  app.post("/api/auth/login", async (req, res) => {
-    try {
-      const { username, password } = loginSchema.parse(req.body);
-      
-      const user = await storage.authenticateUser(username, password);
-      if (!user) {
-        return res.status(401).json({ message: "Неверные учетные данные" });
-      }
-      
-      const { password: _, ...userWithoutPassword } = user;
-      res.json(userWithoutPassword);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Неверные данные", errors: error.errors });
-      }
-      res.status(500).json({ message: "Ошибка при входе" });
-    }
-  });
-
-  // Tours API
+  // Tours
   app.get("/api/tours", async (req, res) => {
     try {
       const { category, hot } = req.query;
       
-      let tours;
-      if (category) {
-        tours = await storage.getToursByCategory(category as string);
-      } else if (hot === "true") {
-        tours = await storage.getHotTours();
-      } else {
-        tours = await storage.getAllTours();
+      if (hot === "true") {
+        const tours = await storage.getHotTours();
+        return res.json(tours);
       }
       
+      if (category && category !== "all") {
+        const tours = await storage.getToursByCategory(category as string);
+        return res.json(tours);
+      }
+      
+      const tours = await storage.getAllTours();
       res.json(tours);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch tours" });
+      res.status(500).json({ message: "Ошибка при получении туров" });
     }
   });
 
   app.get("/api/tours/:id", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
-      const tour = await storage.getTour(id);
-      
+      const tour = await storage.getTour(parseInt(req.params.id));
       if (!tour) {
-        return res.status(404).json({ message: "Tour not found" });
+        return res.status(404).json({ message: "Тур не найден" });
       }
-      
       res.json(tour);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch tour" });
+      res.status(500).json({ message: "Ошибка при получении тура" });
     }
   });
 
-  app.post("/api/tours", async (req, res) => {
+  app.post("/api/tours", async (req: any, res) => {
     try {
       const tourData = insertTourSchema.parse(req.body);
       const tour = await storage.createTour(tourData);
       res.status(201).json(tour);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid tour data", errors: error.errors });
+        return res.status(400).json({ message: "Неверные данные", errors: error.errors });
       }
-      res.status(500).json({ message: "Failed to create tour" });
+      res.status(500).json({ message: "Ошибка при создании тура" });
     }
   });
 
-  app.put("/api/tours/:id", async (req, res) => {
+  app.put("/api/tours/:id", async (req: any, res) => {
     try {
-      const id = parseInt(req.params.id);
       const tourData = insertTourSchema.partial().parse(req.body);
-      const tour = await storage.updateTour(id, tourData);
+      const tour = await storage.updateTour(parseInt(req.params.id), tourData);
       
       if (!tour) {
-        return res.status(404).json({ message: "Tour not found" });
+        return res.status(404).json({ message: "Тур не найден" });
       }
       
       res.json(tour);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid tour data", errors: error.errors });
+        return res.status(400).json({ message: "Неверные данные", errors: error.errors });
       }
-      res.status(500).json({ message: "Failed to update tour" });
+      res.status(500).json({ message: "Ошибка при обновлении тура" });
     }
   });
 
-  app.delete("/api/tours/:id", async (req, res) => {
+  app.delete("/api/tours/:id", async (req: any, res) => {
     try {
-      const id = parseInt(req.params.id);
-      const success = await storage.deleteTour(id);
-      
+      const success = await storage.deleteTour(parseInt(req.params.id));
       if (!success) {
-        return res.status(404).json({ message: "Tour not found" });
+        return res.status(404).json({ message: "Тур не найден" });
       }
       
-      res.status(204).send();
+      res.json({ message: "Тур удален" });
     } catch (error) {
-      res.status(500).json({ message: "Failed to delete tour" });
+      res.status(500).json({ message: "Ошибка при удалении тура" });
     }
   });
 
-  // Bookings API
-  app.get("/api/bookings", async (req, res) => {
+  // Bookings
+  app.get("/api/bookings", async (req: any, res) => {
     try {
-      const { tourId } = req.query;
-      
-      let bookings;
-      if (tourId) {
-        bookings = await storage.getBookingsByTour(parseInt(tourId as string));
-      } else {
-        bookings = await storage.getAllBookings();
-      }
-      
+      const bookings = await storage.getAllBookings();
       res.json(bookings);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch bookings" });
-    }
-  });
-
-  app.get("/api/bookings/:id", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const booking = await storage.getBooking(id);
-      
-      if (!booking) {
-        return res.status(404).json({ message: "Booking not found" });
-      }
-      
-      res.json(booking);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch booking" });
+      res.status(500).json({ message: "Ошибка при получении бронирований" });
     }
   });
 
@@ -175,48 +110,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(booking);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid booking data", errors: error.errors });
+        return res.status(400).json({ message: "Неверные данные", errors: error.errors });
       }
-      res.status(500).json({ message: "Failed to create booking" });
+      res.status(500).json({ message: "Ошибка при создании бронирования" });
     }
   });
 
-  app.patch("/api/bookings/:id/status", async (req, res) => {
+  app.put("/api/bookings/:id", async (req: any, res) => {
     try {
-      const id = parseInt(req.params.id);
       const { status } = req.body;
-      
-      if (!status || typeof status !== "string") {
-        return res.status(400).json({ message: "Status is required" });
-      }
-      
-      const booking = await storage.updateBookingStatus(id, status);
+      const booking = await storage.updateBookingStatus(parseInt(req.params.id), status);
       
       if (!booking) {
-        return res.status(404).json({ message: "Booking not found" });
+        return res.status(404).json({ message: "Бронирование не найдено" });
       }
       
       res.json(booking);
     } catch (error) {
-      res.status(500).json({ message: "Failed to update booking status" });
+      res.status(500).json({ message: "Ошибка при обновлении бронирования" });
     }
   });
 
-  // Reviews API
-  app.get("/api/reviews/:tourId", async (req, res) => {
+  // Reviews
+  app.get("/api/tours/:id/reviews", async (req, res) => {
     try {
-      const tourId = parseInt(req.params.tourId);
-      const reviews = await storage.getReviewsByTour(tourId);
+      const reviews = await storage.getReviewsByTour(parseInt(req.params.id));
       res.json(reviews);
     } catch (error) {
       res.status(500).json({ message: "Ошибка при получении отзывов" });
     }
   });
 
-  app.post("/api/reviews", async (req, res) => {
+  app.post("/api/tours/:id/reviews", async (req: any, res) => {
     try {
       const reviewData = insertReviewSchema.parse(req.body);
-      const review = await storage.createReview(reviewData);
+      
+      const review = await storage.createReview({
+        ...reviewData,
+        tourId: parseInt(req.params.id),
+      }, "anonymous-user");
+      
       res.status(201).json(review);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -224,6 +157,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.status(500).json({ message: "Ошибка при создании отзыва" });
     }
+  });
+
+  // Favorites (temporarily disabled for testing)
+  app.get("/api/favorites", async (req: any, res) => {
+    res.json([]);
+  });
+
+  app.post("/api/favorites", async (req: any, res) => {
+    res.json({ message: "Для работы с избранным необходимо войти в систему" });
+  });
+
+  app.delete("/api/favorites/:tourId", async (req: any, res) => {
+    res.json({ message: "Для работы с избранным необходимо войти в систему" });
   });
 
   const httpServer = createServer(app);

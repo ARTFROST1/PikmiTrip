@@ -1,12 +1,9 @@
-import { users, tours, bookings, reviews, type User, type InsertUser, type Tour, type InsertTour, type Booking, type InsertBooking, type Review, type InsertReview } from "@shared/schema";
+import { users, tours, bookings, reviews, favorites, type User, type UpsertUser, type Tour, type InsertTour, type Booking, type InsertBooking, type Review, type InsertReview, type Favorite, type InsertFavorite } from "@shared/schema";
 
 export interface IStorage {
-  // Users
-  getUser(id: number): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  getUserByEmail(email: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
-  authenticateUser(username: string, password: string): Promise<User | null>;
+  // Users (for Replit Auth)
+  getUser(id: string): Promise<User | undefined>;
+  upsertUser(user: UpsertUser): Promise<User>;
   
   // Tours
   getTour(id: number): Promise<Tour | undefined>;
@@ -27,173 +24,152 @@ export interface IStorage {
   // Reviews
   getReview(id: number): Promise<Review | undefined>;
   getReviewsByTour(tourId: number): Promise<Review[]>;
-  createReview(review: InsertReview): Promise<Review>;
+  createReview(review: InsertReview, userId: string): Promise<Review>;
   updateTourRating(tourId: number): Promise<void>;
+  
+  // Favorites
+  getUserFavorites(userId: string): Promise<Favorite[]>;
+  addFavorite(userId: string, tourId: number): Promise<Favorite>;
+  removeFavorite(userId: string, tourId: number): Promise<boolean>;
+  isFavorite(userId: string, tourId: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
-  private users: Map<number, User>;
+  private users: Map<string, User>;
   private tours: Map<number, Tour>;
   private bookings: Map<number, Booking>;
   private reviews: Map<number, Review>;
-  private currentUserId: number;
+  private favorites: Map<string, Favorite>;
   private currentTourId: number;
   private currentBookingId: number;
   private currentReviewId: number;
+  private currentFavoriteId: number;
 
   constructor() {
     this.users = new Map();
     this.tours = new Map();
     this.bookings = new Map();
     this.reviews = new Map();
-    this.currentUserId = 1;
+    this.favorites = new Map();
     this.currentTourId = 1;
     this.currentBookingId = 1;
     this.currentReviewId = 1;
+    this.currentFavoriteId = 1;
     
-    // Initialize with sample tours
     this.initializeSampleTours();
   }
 
   private initializeSampleTours() {
-    const sampleTours: InsertTour[] = [
+    const sampleTours = [
       {
+        id: this.currentTourId++,
         title: "Карельские озера",
-        description: "Прозрачные озера, девственные леса и свежий воздух. Идеальное место для восстановления сил и единения с природой.",
-        location: "Петрозаводск",
-        duration: "2 дня",
-        price: 12500,
-        maxPeople: 4,
-        imageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600",
-        category: "nature",
-        tags: ["природа", "озера", "карелия"],
-        isHot: true,
-        included: ["Трансфер", "Проживание", "Завтрак", "Экскурсовод"],
-        excluded: ["Обед", "Ужин", "Личные расходы"],
-        program: "День 1: Прибытие в Петрозаводск, размещение, обзорная экскурсия\nДень 2: Поездка к озерам, пикник, возвращение",
-        route: JSON.stringify([
-          { lat: 61.7849, lng: 34.3469, name: "Петрозаводск" },
-          { lat: 61.9026, lng: 34.1372, name: "Кижи" }
-        ]),
-      },
-      {
-        title: "Алтайские горы",
-        description: "Величественные горы, альпийские луга и кристальные реки. Настоящее приключение для любителей активного отдыха.",
-        location: "Горно-Алтайск",
+        description: "Прозрачные воды и первозданная природа",
+        location: "Карелия",
         duration: "3 дня",
-        price: 18900,
-        maxPeople: 2,
-        imageUrl: "https://images.unsplash.com/photo-1464822759844-d150b9f4c1a8?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600",
-        category: "mountains",
-        tags: ["горы", "алтай", "активный отдых"],
-        isHot: false,
-        included: ["Трансфер", "Проживание", "Трёхразовое питание", "Гид", "Снаряжение"],
-        excluded: ["Алкоголь", "Сувениры", "Медицинская страховка"],
-        program: "День 1: Прибытие, размещение, знакомство с группой\nДень 2: Треккинг к горному озеру, пикник\nДень 3: Восхождение на смотровую площадку, возвращение",
-        route: JSON.stringify([
-          { lat: 51.9581, lng: 85.9603, name: "Горно-Алтайск" },
-          { lat: 50.4547, lng: 87.7506, name: "Белуха" }
-        ]),
-      },
-      {
-        title: "Куршская коса",
-        description: "Уникальный природный заповедник между морем и заливом. Песчаные дюны, сосновые леса и безграничное небо.",
-        location: "Калининград",
-        duration: "2 дня",
-        price: 15200,
-        maxPeople: 3,
-        imageUrl: "https://images.unsplash.com/photo-1582719471384-894fbb16e074?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600",
+        price: 15000,
+        maxPeople: 8,
+        imageUrl: "/api/placeholder/300/200",
         rating: 47,
-        category: "coastal",
-        tags: ["море", "пляж", "дюны"],
-        isHot: false,
-      },
-      {
-        title: "Золотое кольцо",
-        description: "Погружение в историю России. Древние храмы, золотые купола и дух старых русских городов.",
-        location: "Владимир",
-        duration: "2 дня",
-        price: 11800,
-        maxPeople: 4,
-        imageUrl: "https://images.unsplash.com/photo-1513326738677-b964603b136d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600",
-        rating: 46,
-        category: "cultural",
-        tags: ["культура", "история", "храмы"],
-        isHot: false,
-      },
-      {
-        title: "Камчатка",
-        description: "Край вулканов, гейзеров и дикой природы. Настоящее приключение для смелых путешественников.",
-        location: "Петропавловск-Камчатский",
-        duration: "4 дня",
-        price: 35900,
-        maxPeople: 2,
-        imageUrl: "https://images.unsplash.com/photo-1506197603052-3cc9c3a201bd?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600",
-        rating: 49,
-        category: "adventure",
-        tags: ["вулканы", "гейзеры", "экстрим"],
-        isHot: false,
-      },
-      {
-        title: "Байкал",
-        description: "Самое глубокое озеро мира. Прозрачная вода, целебный воздух и невероятные рассветы.",
-        location: "Иркутск",
-        duration: "3 дня",
-        price: 22400,
-        maxPeople: 2,
-        imageUrl: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600",
-        rating: 48,
         category: "nature",
-        tags: ["озеро", "байкал", "природа"],
+        tags: ["природа", "озера", "отдых"],
+        isHot: true,
+        included: ["Трансфер", "Проживание", "Питание"],
+        excluded: ["Алкоголь", "Личные расходы"],
+        program: "День 1: Приезд и размещение\nДень 2: Экскурсия по озерам\nДень 3: Отъезд",
+        route: null,
+        agencyId: null,
+        createdAt: new Date(),
+      },
+      {
+        id: this.currentTourId++,
+        title: "Золотое кольцо",
+        description: "Исторические города и древние храмы",
+        location: "Владимир",
+        duration: "5 дней",
+        price: 25000,
+        maxPeople: 12,
+        imageUrl: "/api/placeholder/300/200",
+        rating: 45,
+        category: "cultural",
+        tags: ["история", "культура", "храмы"],
         isHot: false,
+        included: ["Трансфер", "Проживание", "Экскурсии"],
+        excluded: ["Питание", "Сувениры"],
+        program: "День 1: Владимир\nДень 2: Суздаль\nДень 3: Ярославль\nДень 4: Кострома\nДень 5: Возвращение",
+        route: null,
+        agencyId: null,
+        createdAt: new Date(),
+      },
+      {
+        id: this.currentTourId++,
+        title: "Байкал зимой",
+        description: "Ледяные пещеры и кристальный лед",
+        location: "Иркутск",
+        duration: "7 дней",
+        price: 45000,
+        maxPeople: 6,
+        imageUrl: "/api/placeholder/300/200",
+        rating: 50,
+        category: "adventure",
+        tags: ["приключения", "зима", "лед"],
+        isHot: true,
+        included: ["Перелет", "Проживание", "Питание", "Экскурсии"],
+        excluded: ["Личные расходы", "Страховка"],
+        program: "День 1: Прилет в Иркутск\nДень 2-3: Ольхон\nДень 4-5: Ледовые экскурсии\nДень 6: Листвянка\nДень 7: Отлет",
+        route: null,
+        agencyId: null,
+        createdAt: new Date(),
+      },
+      {
+        id: this.currentTourId++,
+        title: "Кавказские горы",
+        description: "Горные пики и альпийские луга",
+        location: "Кабардино-Балкария",
+        duration: "6 дней",
+        price: 35000,
+        maxPeople: 10,
+        imageUrl: "/api/placeholder/300/200",
+        rating: 48,
+        category: "adventure",
+        tags: ["горы", "треккинг", "природа"],
+        isHot: false,
+        included: ["Трансфер", "Проживание", "Питание", "Гид"],
+        excluded: ["Снаряжение", "Страховка"],
+        program: "День 1: Приезд в Нальчик\nДень 2-4: Треккинг\nДень 5: Отдых\nДень 6: Отъезд",
+        route: null,
+        agencyId: null,
+        createdAt: new Date(),
       },
     ];
 
     sampleTours.forEach(tour => {
-      this.tours.set(this.currentTourId, { 
-        ...tour, 
-        id: this.currentTourId, 
-        rating: 40, // Default rating
-        createdAt: new Date() 
-      });
-      this.currentTourId++;
+      this.tours.set(tour.id, tour);
     });
   }
 
-  // Users
-  async getUser(id: number): Promise<User | undefined> {
+  // Users (for Replit Auth)
+  async getUser(id: string): Promise<User | undefined> {
     return this.users.get(id);
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
-  }
-
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentUserId++;
-    const user: User = { 
-      ...insertUser, 
-      id,
-      createdAt: new Date()
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const existingUser = this.users.get(userData.id);
+    const user: User = {
+      ...existingUser,
+      ...userData,
+      email: userData.email || null,
+      firstName: userData.firstName || null,
+      lastName: userData.lastName || null,
+      profileImageUrl: userData.profileImageUrl || null,
+      userType: userData.userType || "traveler",
+      stripeCustomerId: userData.stripeCustomerId || null,
+      stripeSubscriptionId: userData.stripeSubscriptionId || null,
+      createdAt: existingUser?.createdAt || new Date(),
+      updatedAt: new Date(),
     };
-    this.users.set(id, user);
+    this.users.set(userData.id, user);
     return user;
-  }
-
-  async getUserByEmail(email: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.email === email,
-    );
-  }
-
-  async authenticateUser(username: string, password: string): Promise<User | null> {
-    const user = await this.getUserByUsername(username);
-    if (user && user.password === password) {
-      return user;
-    }
-    return null;
   }
 
   // Tours
@@ -206,36 +182,35 @@ export class MemStorage implements IStorage {
   }
 
   async getToursByCategory(category: string): Promise<Tour[]> {
-    return Array.from(this.tours.values()).filter(
-      (tour) => tour.category === category,
-    );
+    return Array.from(this.tours.values()).filter(tour => tour.category === category);
   }
 
   async getHotTours(): Promise<Tour[]> {
-    return Array.from(this.tours.values()).filter(
-      (tour) => tour.isHot,
-    );
+    return Array.from(this.tours.values()).filter(tour => tour.isHot);
   }
 
   async createTour(insertTour: InsertTour): Promise<Tour> {
-    const id = this.currentTourId++;
     const tour: Tour = { 
-      ...insertTour, 
-      id, 
-      rating: 40, // Default rating 
-      createdAt: new Date(),
+      id: this.currentTourId++,
+      ...insertTour,
+      rating: 0,
+      agencyId: null,
       tags: insertTour.tags || null,
-      isHot: insertTour.isHot || false
+      included: insertTour.included || null,
+      excluded: insertTour.excluded || null,
+      route: insertTour.route || null,
+      isHot: insertTour.isHot || false,
+      createdAt: new Date(),
     };
-    this.tours.set(id, tour);
+    this.tours.set(tour.id, tour);
     return tour;
   }
 
   async updateTour(id: number, tourUpdate: Partial<InsertTour>): Promise<Tour | undefined> {
-    const existingTour = this.tours.get(id);
-    if (!existingTour) return undefined;
-
-    const updatedTour = { ...existingTour, ...tourUpdate };
+    const tour = this.tours.get(id);
+    if (!tour) return undefined;
+    
+    const updatedTour = { ...tour, ...tourUpdate };
     this.tours.set(id, updatedTour);
     return updatedTour;
   }
@@ -254,31 +229,30 @@ export class MemStorage implements IStorage {
   }
 
   async getBookingsByTour(tourId: number): Promise<Booking[]> {
-    return Array.from(this.bookings.values()).filter(
-      (booking) => booking.tourId === tourId,
-    );
+    return Array.from(this.bookings.values()).filter(booking => booking.tourId === tourId);
   }
 
   async createBooking(insertBooking: InsertBooking): Promise<Booking> {
-    const id = this.currentBookingId++;
     const booking: Booking = { 
-      ...insertBooking, 
-      id, 
+      id: this.currentBookingId++,
+      ...insertBooking,
+      userId: null,
       status: "pending",
+      notes: insertBooking.notes || null,
+      paymentIntentId: null,
       createdAt: new Date(),
-      notes: insertBooking.notes || null
     };
-    this.bookings.set(id, booking);
+    this.bookings.set(booking.id, booking);
     return booking;
   }
 
   async updateBookingStatus(id: number, status: string): Promise<Booking | undefined> {
-    const existingBooking = this.bookings.get(id);
-    if (!existingBooking) return undefined;
-
-    const updatedBooking = { ...existingBooking, status };
-    this.bookings.set(id, updatedBooking);
-    return updatedBooking;
+    const booking = this.bookings.get(id);
+    if (!booking) return undefined;
+    
+    booking.status = status;
+    this.bookings.set(id, booking);
+    return booking;
   }
 
   // Reviews
@@ -287,21 +261,19 @@ export class MemStorage implements IStorage {
   }
 
   async getReviewsByTour(tourId: number): Promise<Review[]> {
-    return Array.from(this.reviews.values()).filter(
-      (review) => review.tourId === tourId,
-    );
+    return Array.from(this.reviews.values()).filter(review => review.tourId === tourId);
   }
 
-  async createReview(insertReview: InsertReview): Promise<Review> {
-    const id = this.currentReviewId++;
+  async createReview(insertReview: InsertReview, userId: string): Promise<Review> {
     const review: Review = { 
-      ...insertReview, 
-      id, 
-      createdAt: new Date()
+      id: this.currentReviewId++,
+      ...insertReview,
+      userId: userId,
+      createdAt: new Date(),
     };
-    this.reviews.set(id, review);
+    this.reviews.set(review.id, review);
     
-    // Update tour rating based on reviews
+    // Update tour rating
     await this.updateTourRating(insertReview.tourId);
     
     return review;
@@ -309,17 +281,228 @@ export class MemStorage implements IStorage {
 
   async updateTourRating(tourId: number): Promise<void> {
     const reviews = await this.getReviewsByTour(tourId);
-    if (reviews.length === 0) return;
-
-    const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
-    const avgRating = Math.round((totalRating / reviews.length) * 10); // Convert to 0-50 scale
-    
     const tour = this.tours.get(tourId);
-    if (tour) {
-      tour.rating = avgRating;
+    
+    if (tour && reviews.length > 0) {
+      const averageRating = reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length;
+      tour.rating = Math.round(averageRating * 10); // Store as integer * 10
       this.tours.set(tourId, tour);
     }
   }
+
+  // Favorites
+  async getUserFavorites(userId: string): Promise<Favorite[]> {
+    return Array.from(this.favorites.values()).filter(fav => fav.userId === userId);
+  }
+
+  async addFavorite(userId: string, tourId: number): Promise<Favorite> {
+    const favorite: Favorite = {
+      id: this.currentFavoriteId++,
+      userId: userId,
+      tourId: tourId,
+      createdAt: new Date(),
+    };
+    this.favorites.set(`${userId}-${tourId}`, favorite);
+    return favorite;
+  }
+
+  async removeFavorite(userId: string, tourId: number): Promise<boolean> {
+    return this.favorites.delete(`${userId}-${tourId}`);
+  }
+
+  async isFavorite(userId: string, tourId: number): Promise<boolean> {
+    return this.favorites.has(`${userId}-${tourId}`);
+  }
 }
 
-export const storage = new MemStorage();
+import { db } from "./db";
+import { eq } from "drizzle-orm";
+
+export class DatabaseStorage implements IStorage {
+  // Users (for Replit Auth)
+  async getUser(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values({
+        ...userData,
+        email: userData.email || null,
+        firstName: userData.firstName || null,
+        lastName: userData.lastName || null,
+        profileImageUrl: userData.profileImageUrl || null,
+        userType: userData.userType || "traveler",
+        stripeCustomerId: userData.stripeCustomerId || null,
+        stripeSubscriptionId: userData.stripeSubscriptionId || null,
+      })
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return user;
+  }
+
+  // Tours
+  async getTour(id: number): Promise<Tour | undefined> {
+    const [tour] = await db.select().from(tours).where(eq(tours.id, id));
+    return tour;
+  }
+
+  async getAllTours(): Promise<Tour[]> {
+    return await db.select().from(tours);
+  }
+
+  async getToursByCategory(category: string): Promise<Tour[]> {
+    return await db.select().from(tours).where(eq(tours.category, category));
+  }
+
+  async getHotTours(): Promise<Tour[]> {
+    return await db.select().from(tours).where(eq(tours.isHot, true));
+  }
+
+  async createTour(insertTour: InsertTour): Promise<Tour> {
+    const [tour] = await db
+      .insert(tours)
+      .values({
+        ...insertTour,
+        rating: 0,
+        agencyId: null,
+        tags: insertTour.tags || null,
+        included: insertTour.included || null,
+        excluded: insertTour.excluded || null,
+        route: insertTour.route || null,
+        isHot: insertTour.isHot || false,
+      })
+      .returning();
+    return tour;
+  }
+
+  async updateTour(id: number, tourUpdate: Partial<InsertTour>): Promise<Tour | undefined> {
+    const [tour] = await db
+      .update(tours)
+      .set(tourUpdate)
+      .where(eq(tours.id, id))
+      .returning();
+    return tour;
+  }
+
+  async deleteTour(id: number): Promise<boolean> {
+    const result = await db.delete(tours).where(eq(tours.id, id));
+    return (result.rowCount || 0) > 0;
+  }
+
+  // Bookings
+  async getBooking(id: number): Promise<Booking | undefined> {
+    const [booking] = await db.select().from(bookings).where(eq(bookings.id, id));
+    return booking;
+  }
+
+  async getAllBookings(): Promise<Booking[]> {
+    return await db.select().from(bookings);
+  }
+
+  async getBookingsByTour(tourId: number): Promise<Booking[]> {
+    return await db.select().from(bookings).where(eq(bookings.tourId, tourId));
+  }
+
+  async createBooking(insertBooking: InsertBooking): Promise<Booking> {
+    const [booking] = await db
+      .insert(bookings)
+      .values({
+        ...insertBooking,
+        userId: null,
+        status: "pending",
+        notes: insertBooking.notes || null,
+        paymentIntentId: null,
+      })
+      .returning();
+    return booking;
+  }
+
+  async updateBookingStatus(id: number, status: string): Promise<Booking | undefined> {
+    const [booking] = await db
+      .update(bookings)
+      .set({ status })
+      .where(eq(bookings.id, id))
+      .returning();
+    return booking;
+  }
+
+  // Reviews
+  async getReview(id: number): Promise<Review | undefined> {
+    const [review] = await db.select().from(reviews).where(eq(reviews.id, id));
+    return review;
+  }
+
+  async getReviewsByTour(tourId: number): Promise<Review[]> {
+    return await db.select().from(reviews).where(eq(reviews.tourId, tourId));
+  }
+
+  async createReview(insertReview: InsertReview, userId: string): Promise<Review> {
+    const [review] = await db
+      .insert(reviews)
+      .values({
+        ...insertReview,
+        userId: userId,
+      })
+      .returning();
+    
+    // Update tour rating
+    await this.updateTourRating(insertReview.tourId);
+    
+    return review;
+  }
+
+  async updateTourRating(tourId: number): Promise<void> {
+    const reviewList = await this.getReviewsByTour(tourId);
+    
+    if (reviewList.length > 0) {
+      const averageRating = reviewList.reduce((sum, review) => sum + review.rating, 0) / reviewList.length;
+      await db
+        .update(tours)
+        .set({ rating: Math.round(averageRating * 10) }) // Store as integer * 10
+        .where(eq(tours.id, tourId));
+    }
+  }
+
+  // Favorites
+  async getUserFavorites(userId: string): Promise<Favorite[]> {
+    return await db.select().from(favorites).where(eq(favorites.userId, userId));
+  }
+
+  async addFavorite(userId: string, tourId: number): Promise<Favorite> {
+    const [favorite] = await db
+      .insert(favorites)
+      .values({
+        userId: userId,
+        tourId: tourId,
+      })
+      .returning();
+    return favorite;
+  }
+
+  async removeFavorite(userId: string, tourId: number): Promise<boolean> {
+    const result = await db
+      .delete(favorites)
+      .where(eq(favorites.userId, userId) && eq(favorites.tourId, tourId));
+    return (result.rowCount || 0) > 0;
+  }
+
+  async isFavorite(userId: string, tourId: number): Promise<boolean> {
+    const [favorite] = await db
+      .select()
+      .from(favorites)
+      .where(eq(favorites.userId, userId) && eq(favorites.tourId, tourId));
+    return !!favorite;
+  }
+}
+
+// Use database storage in production, memory storage for development
+export const storage = process.env.DATABASE_URL ? new DatabaseStorage() : new MemStorage();

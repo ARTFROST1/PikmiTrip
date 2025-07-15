@@ -3,14 +3,12 @@ import { Link, useLocation } from "wouter";
 import { Menu, X, Route, User } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/AuthContext";
-import AuthModal from "@/components/auth-modal";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [location] = useLocation();
-  const { user, isAuthenticated, isAgency, logout } = useAuth();
+  const { user, isAuthenticated } = useAuth();
 
   const navigation = [
     { name: "Туры", href: "/tours" },
@@ -68,7 +66,7 @@ export default function Header() {
             
             {isAuthenticated ? (
               <>
-                {isAgency && (
+                {user?.userType === "agency" && (
                   <Link href="/admin">
                     <Button
                       variant="ghost"
@@ -85,21 +83,21 @@ export default function Header() {
                     className="hidden md:flex items-center space-x-2 text-gray-600 hover:text-emerald-600"
                   >
                     <User size={16} />
-                    <span>{user?.firstName}</span>
+                    <span>{user?.firstName || "Пользователь"}</span>
                   </Button>
                 </Link>
                 
                 <Button
                   variant="ghost"
                   className="hidden md:block text-gray-600 hover:text-red-600"
-                  onClick={logout}
+                  onClick={() => window.location.href = "/api/logout"}
                 >
                   Выйти
                 </Button>
               </>
             ) : (
               <Button 
-                onClick={() => setIsAuthModalOpen(true)}
+                onClick={() => window.location.href = "/api/login"}
                 className="hidden md:block bg-gradient-to-r from-emerald-500 to-sky-500 text-white hover:from-emerald-600 hover:to-sky-600 transition-all duration-200 font-medium"
               >
                 Войти
@@ -137,7 +135,7 @@ export default function Header() {
               
               {isAuthenticated ? (
                 <>
-                  {isAgency && (
+                  {user?.userType === "agency" && (
                     <Link href="/admin">
                       <Button
                         variant="ghost"
@@ -164,7 +162,7 @@ export default function Header() {
                     variant="ghost"
                     className="w-full justify-start text-gray-600 hover:text-red-600"
                     onClick={() => {
-                      logout();
+                      window.location.href = "/api/logout";
                       setIsMenuOpen(false);
                     }}
                   >
@@ -175,7 +173,7 @@ export default function Header() {
                 <Button 
                   className="w-full bg-gradient-to-r from-emerald-500 to-sky-500 text-white hover:from-emerald-600 hover:to-sky-600 transition-all duration-200 font-medium"
                   onClick={() => {
-                    setIsAuthModalOpen(true);
+                    window.location.href = "/api/login";
                     setIsMenuOpen(false);
                   }}
                 >
@@ -186,11 +184,7 @@ export default function Header() {
           </motion.div>
         )}
       </AnimatePresence>
-      
-      <AuthModal 
-        isOpen={isAuthModalOpen} 
-        onClose={() => setIsAuthModalOpen(false)} 
-      />
+
     </motion.header>
   );
 }
