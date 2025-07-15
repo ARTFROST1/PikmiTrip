@@ -15,14 +15,18 @@ import FAQ from "@/pages/faq";
 import Favorites from "@/pages/favorites";
 import Blog from "@/pages/blog";
 import NotFound from "@/pages/not-found";
+import AuthPage from "@/pages/auth";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Загрузка...</p>
+        </div>
       </div>
     );
   }
@@ -39,6 +43,7 @@ function Router() {
       <Route path="/faq" component={FAQ} />
       <Route path="/favorites" component={Favorites} />
       <Route path="/blog" component={Blog} />
+      <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>
   );

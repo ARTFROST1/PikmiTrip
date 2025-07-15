@@ -23,16 +23,6 @@ export default function Header() {
     return location.startsWith(href);
   };
 
-  const handleLogout = async () => {
-    try {
-      await fetch("/api/logout", { method: "POST" });
-      window.location.href = "/";
-    } catch (error) {
-      console.error("Logout error:", error);
-      window.location.href = "/";
-    }
-  };
-
   return (
     <motion.header 
       initial={{ y: -100 }}
@@ -89,26 +79,56 @@ export default function Header() {
                 <Link href="/profile">
                   <Button
                     variant="ghost"
-                    className="hidden md:flex items-center space-x-1 text-gray-600 hover:text-emerald-600"
+                    className="hidden md:block text-gray-600 hover:text-emerald-600"
                   >
-                    <User size={16} />
-                    <span>{user?.firstName || 'Профиль'}</span>
+                    <User size={16} className="mr-1" />
+                    {user?.firstName || 'Профиль'}
                   </Button>
                 </Link>
                 <Button
                   variant="ghost"
-                  className="hidden md:block text-gray-600 hover:text-red-600"
-                  onClick={handleLogout}
+                  className="hidden md:block text-gray-600 hover:text-emerald-600"
+                  onClick={async () => {
+                    await fetch("/api/logout", { method: "POST" });
+                    window.location.reload();
+                  }}
                 >
                   Выйти
                 </Button>
               </>
             ) : (
               <Link href="/auth">
-                <Button className="hidden md:block bg-gradient-to-r from-emerald-500 to-sky-500 text-white hover:from-emerald-600 hover:to-sky-600 transition-all duration-200 font-medium">
+                <Button className="bg-emerald-600 hover:bg-emerald-700 text-white">
                   Войти
+                    </Button>
+                  </Link>
+                )}
+                
+                <Link href="/profile">
+                  <Button
+                    variant="ghost"
+                    className="hidden md:flex items-center space-x-2 text-gray-600 hover:text-emerald-600"
+                  >
+                    <User size={16} />
+                    <span>{user?.firstName || "Пользователь"}</span>
+                  </Button>
+                </Link>
+                
+                <Button
+                  variant="ghost"
+                  className="hidden md:block text-gray-600 hover:text-red-600"
+                  onClick={() => window.location.href = "/api/logout"}
+                >
+                  Выйти
                 </Button>
-              </Link>
+              </>
+            ) : (
+              <Button 
+                onClick={() => window.location.href = "/api/login"}
+                className="hidden md:block bg-gradient-to-r from-emerald-500 to-sky-500 text-white hover:from-emerald-600 hover:to-sky-600 transition-all duration-200 font-medium"
+              >
+                Войти
+              </Button>
             )}
           </div>
         </div>
@@ -141,7 +161,7 @@ export default function Header() {
               ))}
               
               {isAuthenticated ? (
-                <div className="space-y-2 pt-2 border-t border-gray-200">
+                <>
                   {user?.userType === "agency" && (
                     <Link href="/admin">
                       <Button
@@ -153,6 +173,7 @@ export default function Header() {
                       </Button>
                     </Link>
                   )}
+                  
                   <Link href="/profile">
                     <Button
                       variant="ghost"
@@ -160,36 +181,37 @@ export default function Header() {
                       onClick={() => setIsMenuOpen(false)}
                     >
                       <User size={16} className="mr-2" />
-                      {user?.firstName || 'Профиль'}
+                      Профиль
                     </Button>
                   </Link>
+                  
                   <Button
                     variant="ghost"
                     className="w-full justify-start text-gray-600 hover:text-red-600"
                     onClick={() => {
+                      window.location.href = "/api/logout";
                       setIsMenuOpen(false);
-                      handleLogout();
                     }}
                   >
                     Выйти
                   </Button>
-                </div>
+                </>
               ) : (
-                <div className="pt-2 border-t border-gray-200">
-                  <Link href="/auth">
-                    <Button 
-                      className="w-full bg-gradient-to-r from-emerald-500 to-sky-500 text-white hover:from-emerald-600 hover:to-sky-600"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      Войти
-                    </Button>
-                  </Link>
-                </div>
+                <Button 
+                  className="w-full bg-gradient-to-r from-emerald-500 to-sky-500 text-white hover:from-emerald-600 hover:to-sky-600 transition-all duration-200 font-medium"
+                  onClick={() => {
+                    window.location.href = "/api/login";
+                    setIsMenuOpen(false);
+                  }}
+                >
+                  Войти
+                </Button>
               )}
             </div>
           </motion.div>
         )}
       </AnimatePresence>
+
     </motion.header>
   );
 }

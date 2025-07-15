@@ -13,15 +13,17 @@ export const sessions = pgTable(
   (table) => [index("IDX_session_expire").on(table.expire)],
 );
 
-// User storage table for Replit Auth
+// User storage table with multiple auth providers support
 export const users = pgTable("users", {
-  id: varchar("id").primaryKey().notNull(),
-  username: varchar("username"),
-  email: varchar("email").unique(),
+  id: varchar("id").primaryKey(),
+  email: varchar("email").unique().notNull(),
+  password: varchar("password"), // null for OAuth users
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
   userType: text("user_type").notNull().default("traveler"), // 'traveler' or 'agency'
+  authProvider: text("auth_provider").notNull().default("email"), // 'email', 'google'
+  googleId: varchar("google_id"), // Google OAuth ID
   stripeCustomerId: varchar("stripe_customer_id"),
   stripeSubscriptionId: varchar("stripe_subscription_id"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -37,7 +39,7 @@ export const tours = pgTable("tours", {
   price: integer("price").notNull(),
   maxPeople: integer("max_people").notNull(),
   imageUrl: text("image_url").notNull(),
-  rating: integer("rating").notNull(), // Rating * 10 to avoid floats, calculated from reviews
+  rating: integer("rating").notNull().default(0), // Rating * 10 to avoid floats, calculated from reviews
   category: text("category").notNull(),
   tags: text("tags").array(),
   isHot: boolean("is_hot").default(false),
@@ -83,7 +85,7 @@ export const favorites = pgTable("favorites", {
 });
 
 // Replit Auth compatible types
-export type UpsertUser = typeof users.$inferInsert;
+export type InsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 
 export const insertTourSchema = createInsertSchema(tours).omit({
