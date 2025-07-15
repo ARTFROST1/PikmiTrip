@@ -4,15 +4,30 @@ import { storage } from "./storage";
 import { insertTourSchema, insertBookingSchema, insertReviewSchema } from "@shared/schema";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { z } from "zod";
+import Stripe from "stripe";
+
+// Initialize Stripe if keys are available
+let stripe: Stripe | null = null;
+if (process.env.STRIPE_SECRET_KEY) {
+  stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: "2023-10-16",
+  });
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Skip auth setup for now to test basic functionality
-  // await setupAuth(app);
+  // Auth middleware
+  await setupAuth(app);
 
-  // Temporary auth route without authentication
-  app.get('/api/auth/user', async (req: any, res) => {
-    // Return null for now - user not authenticated
-    res.json(null);
+  // Auth routes
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
   });
 
   // Tours
@@ -49,8 +64,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/tours", async (req: any, res) => {
+  // Protected route for creating tours (agency only)
+  app.post("/api/tours", isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user || user.userType !== 'agency') {
+        return res.status(403).json({ message: "Только агентства могут создавать туры" });
+      }
+      
       const tourData = insertTourSchema.parse(req.body);
       const tour = await storage.createTour(tourData);
       res.status(201).json(tour);
@@ -62,8 +85,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/tours/:id", async (req: any, res) => {
+  // Protected route for updating tours (agency only)
+  app.put("/api/tours/:id", isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user || user.userType !== 'agency') {
+        return res.status(403).json({ message: "Только агентства могут редактировать туры" });
+      }
+      
       const tourData = insertTourSchema.partial().parse(req.body);
       const tour = await storage.updateTour(parseInt(req.params.id), tourData);
       
@@ -80,8 +111,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/tours/:id", async (req: any, res) => {
+  // Protected route for deleting tours (agency only)
+  app.delete("/api/tours/:id", isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user || user.userType !== 'agency') {
+        return res.status(403).json({ message: "Только агентства могут удалять туры" });
+      }
+      
       const success = await storage.deleteTour(parseInt(req.params.id));
       if (!success) {
         return res.status(404).json({ message: "Тур не найден" });
@@ -141,14 +180,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/tours/:id/reviews", async (req: any, res) => {
+  // Protected route for creating reviews (authenticated users only)
+  app.post("/api/tours/:id/reviews", isAuthenticated, async (req: any, res) => {
     try {
+      const userId = req.user.claims.sub;
       const reviewData = insertReviewSchema.parse(req.body);
       
       const review = await storage.createReview({
         ...reviewData,
         tourId: parseInt(req.params.id),
-      }, "anonymous-user");
+      }, userId);
       
       res.status(201).json(review);
     } catch (error) {
@@ -159,17 +200,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Favorites (temporarily disabled for testing)
-  app.get("/api/favorites", async (req: any, res) => {
-    res.json([]);
+  // Stripe payment routes
+  if (stripe) {
+    app.post("/api/create-payment-intent", async (req, res) => {
+      try {
+        const { amount } = req.body;
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount: Math.round(amount * 100), // Convert to cents
+          currency: "rub",
+        });
+        res.json({ clientSecret: paymentIntent.client_secret });
+      } catch (error: any) {
+        res.status(500).json({ message: "Ошибка при создании платежа: " + error.message });
+      }
+    });
+  }
+
+  // Favorites routes - protected
+  app.get("/api/favorites", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const favorites = await storage.getUserFavorites(userId);
+      res.json(favorites);
+    } catch (error) {
+      res.status(500).json({ message: "Ошибка при получении избранного" });
+    }
   });
 
-  app.post("/api/favorites", async (req: any, res) => {
-    res.json({ message: "Для работы с избранным необходимо войти в систему" });
+  app.post("/api/favorites", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { tourId } = req.body;
+      const favorite = await storage.addFavorite(userId, tourId);
+      res.status(201).json(favorite);
+    } catch (error) {
+      res.status(500).json({ message: "Ошибка при добавлении в избранное" });
+    }
   });
 
-  app.delete("/api/favorites/:tourId", async (req: any, res) => {
-    res.json({ message: "Для работы с избранным необходимо войти в систему" });
+  app.delete("/api/favorites/:tourId", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const tourId = parseInt(req.params.tourId);
+      const success = await storage.removeFavorite(userId, tourId);
+      if (!success) {
+        return res.status(404).json({ message: "Избранное не найдено" });
+      }
+      res.json({ message: "Удалено из избранного" });
+    } catch (error) {
+      res.status(500).json({ message: "Ошибка при удалении из избранного" });
+    }
   });
 
   const httpServer = createServer(app);

@@ -67,8 +67,9 @@ export class MemStorage implements IStorage {
         location: "Москва",
         duration: "2-3 дня",
         price: 15000,
-        maxParticipants: 20,
-        image: "https://images.unsplash.com/photo-1547036967-23d11aacaee0?w=800",
+        maxPeople: 20,
+        imageUrl: "https://images.unsplash.com/photo-1547036967-23d11aacaee0?w=800",
+        program: "День 1: Прибытие и экскурсия по центру\nДень 2: Красная площадь и Кремль\nДень 3: Третьяковская галерея",
         rating: 45,
         category: "Новогодние",
         tags: null,
@@ -86,8 +87,9 @@ export class MemStorage implements IStorage {
         location: "Карелия",
         duration: "выходные",
         price: 12000,
-        maxParticipants: 15,
-        image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800",
+        maxPeople: 15,
+        imageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800",
+        program: "День 1: Петрозаводск - Кивач\nДень 2: Кижи и деревянные церкви\nДень 3: Рыбалка и отдых",
         rating: 48,
         category: "Природа",
         tags: null,
@@ -105,8 +107,9 @@ export class MemStorage implements IStorage {
         location: "Владимир, Суздаль",
         duration: "3-4 дня",
         price: 18000,
-        maxParticipants: 25,
-        image: "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?w=800",
+        maxPeople: 25,
+        imageUrl: "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?w=800",
+        program: "День 1: Владимир - Успенский собор\nДень 2: Суздаль - музей деревянного зодчества\nДень 3: Боголюбово",
         rating: 46,
         category: "История",
         tags: null,
@@ -133,7 +136,7 @@ export class MemStorage implements IStorage {
     const existingUser = this.users.get(userData.id);
     const user: User = {
       id: userData.id,
-      username: userData.username,
+      username: userData.username || null,
       email: userData.email || null,
       firstName: userData.firstName || null,
       lastName: userData.lastName || null,
@@ -291,96 +294,195 @@ export class MemStorage implements IStorage {
   }
 }
 
-// DatabaseStorage class is disabled for development - using MemStorage instead
+// Import database dependencies conditionally
+import { db } from './db';
+import { eq, and } from 'drizzle-orm';
+
 export class DatabaseStorage implements IStorage {
+  // Users (for Replit Auth)
   async getUser(id: string): Promise<User | undefined> {
-    throw new Error("DatabaseStorage is disabled - use MemStorage instead");
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
-    throw new Error("DatabaseStorage is disabled - use MemStorage instead");
+    const [user] = await db
+      .insert(users)
+      .values({
+        ...userData,
+        email: userData.email || null,
+        firstName: userData.firstName || null,
+        lastName: userData.lastName || null,
+        profileImageUrl: userData.profileImageUrl || null,
+        userType: userData.userType || "traveler",
+        stripeCustomerId: userData.stripeCustomerId || null,
+        stripeSubscriptionId: userData.stripeSubscriptionId || null,
+      })
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return user;
   }
 
+  // Tours
   async getTour(id: number): Promise<Tour | undefined> {
-    throw new Error("DatabaseStorage is disabled - use MemStorage instead");
+    const [tour] = await db.select().from(tours).where(eq(tours.id, id));
+    return tour;
   }
 
   async getAllTours(): Promise<Tour[]> {
-    throw new Error("DatabaseStorage is disabled - use MemStorage instead");
+    return await db.select().from(tours);
   }
 
   async getToursByCategory(category: string): Promise<Tour[]> {
-    throw new Error("DatabaseStorage is disabled - use MemStorage instead");
+    return await db.select().from(tours).where(eq(tours.category, category));
   }
 
   async getHotTours(): Promise<Tour[]> {
-    throw new Error("DatabaseStorage is disabled - use MemStorage instead");
+    return await db.select().from(tours).where(eq(tours.isHot, true));
   }
 
   async createTour(insertTour: InsertTour): Promise<Tour> {
-    throw new Error("DatabaseStorage is disabled - use MemStorage instead");
+    const [tour] = await db
+      .insert(tours)
+      .values({
+        ...insertTour,
+        rating: 0,
+        agencyId: null,
+        tags: insertTour.tags || null,
+        included: insertTour.included || null,
+        excluded: insertTour.excluded || null,
+        route: insertTour.route || null,
+        isHot: insertTour.isHot || false,
+      })
+      .returning();
+    return tour;
   }
 
   async updateTour(id: number, tourUpdate: Partial<InsertTour>): Promise<Tour | undefined> {
-    throw new Error("DatabaseStorage is disabled - use MemStorage instead");
+    const [tour] = await db
+      .update(tours)
+      .set(tourUpdate)
+      .where(eq(tours.id, id))
+      .returning();
+    return tour;
   }
 
   async deleteTour(id: number): Promise<boolean> {
-    throw new Error("DatabaseStorage is disabled - use MemStorage instead");
+    const result = await db.delete(tours).where(eq(tours.id, id));
+    return (result.rowCount || 0) > 0;
   }
 
+  // Bookings
   async getBooking(id: number): Promise<Booking | undefined> {
-    throw new Error("DatabaseStorage is disabled - use MemStorage instead");
+    const [booking] = await db.select().from(bookings).where(eq(bookings.id, id));
+    return booking;
   }
 
   async getAllBookings(): Promise<Booking[]> {
-    throw new Error("DatabaseStorage is disabled - use MemStorage instead");
+    return await db.select().from(bookings);
   }
 
   async getBookingsByTour(tourId: number): Promise<Booking[]> {
-    throw new Error("DatabaseStorage is disabled - use MemStorage instead");
+    return await db.select().from(bookings).where(eq(bookings.tourId, tourId));
   }
 
   async createBooking(insertBooking: InsertBooking): Promise<Booking> {
-    throw new Error("DatabaseStorage is disabled - use MemStorage instead");
+    const [booking] = await db
+      .insert(bookings)
+      .values({
+        ...insertBooking,
+        userId: null,
+        status: "pending",
+        notes: insertBooking.notes || null,
+        paymentIntentId: null,
+      })
+      .returning();
+    return booking;
   }
 
   async updateBookingStatus(id: number, status: string): Promise<Booking | undefined> {
-    throw new Error("DatabaseStorage is disabled - use MemStorage instead");
+    const [booking] = await db
+      .update(bookings)
+      .set({ status })
+      .where(eq(bookings.id, id))
+      .returning();
+    return booking;
   }
 
+  // Reviews
   async getReview(id: number): Promise<Review | undefined> {
-    throw new Error("DatabaseStorage is disabled - use MemStorage instead");
+    const [review] = await db.select().from(reviews).where(eq(reviews.id, id));
+    return review;
   }
 
   async getReviewsByTour(tourId: number): Promise<Review[]> {
-    throw new Error("DatabaseStorage is disabled - use MemStorage instead");
+    return await db.select().from(reviews).where(eq(reviews.tourId, tourId));
   }
 
   async createReview(insertReview: InsertReview, userId: string): Promise<Review> {
-    throw new Error("DatabaseStorage is disabled - use MemStorage instead");
+    const [review] = await db
+      .insert(reviews)
+      .values({
+        ...insertReview,
+        userId: userId,
+      })
+      .returning();
+    
+    // Update tour rating
+    await this.updateTourRating(insertReview.tourId);
+    
+    return review;
   }
 
   async updateTourRating(tourId: number): Promise<void> {
-    throw new Error("DatabaseStorage is disabled - use MemStorage instead");
+    const reviewList = await this.getReviewsByTour(tourId);
+    
+    if (reviewList.length > 0) {
+      const averageRating = reviewList.reduce((sum, review) => sum + review.rating, 0) / reviewList.length;
+      await db
+        .update(tours)
+        .set({ rating: Math.round(averageRating * 10) }) // Store as integer * 10
+        .where(eq(tours.id, tourId));
+    }
   }
 
+  // Favorites
   async getUserFavorites(userId: string): Promise<Favorite[]> {
-    throw new Error("DatabaseStorage is disabled - use MemStorage instead");
+    return await db.select().from(favorites).where(eq(favorites.userId, userId));
   }
 
   async addFavorite(userId: string, tourId: number): Promise<Favorite> {
-    throw new Error("DatabaseStorage is disabled - use MemStorage instead");
+    const [favorite] = await db
+      .insert(favorites)
+      .values({
+        userId: userId,
+        tourId: tourId,
+      })
+      .returning();
+    return favorite;
   }
 
   async removeFavorite(userId: string, tourId: number): Promise<boolean> {
-    throw new Error("DatabaseStorage is disabled - use MemStorage instead");
+    const result = await db
+      .delete(favorites)
+      .where(and(eq(favorites.userId, userId), eq(favorites.tourId, tourId)));
+    return (result.rowCount || 0) > 0;
   }
 
   async isFavorite(userId: string, tourId: number): Promise<boolean> {
-    throw new Error("DatabaseStorage is disabled - use MemStorage instead");
+    const [favorite] = await db
+      .select()
+      .from(favorites)
+      .where(and(eq(favorites.userId, userId), eq(favorites.tourId, tourId)));
+    return !!favorite;
   }
 }
 
-// Use memory storage for development
-export const storage = new MemStorage();
+// Use database storage in production, memory storage for development
+export const storage = new DatabaseStorage();
