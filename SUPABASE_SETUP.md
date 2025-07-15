@@ -10,25 +10,32 @@
    - **Database Password**: Придумайте надежный пароль
    - **Region**: Выберите ближайший регион
 
-## Шаг 2: Получение строки подключения
+## Шаг 2: Получение строки подключения DATABASE_URL
 
-1. После создания проекта откройте Dashboard
-2. Нажмите кнопку **"Connect"** в верхней панели
-3. Выберите вкладку **"Connection string"**
-4. Скопируйте строку из раздела **"Transaction pooler"**
-5. Замените `[YOUR-PASSWORD]` на пароль, который вы указали при создании
-
-Пример строки подключения:
+1. В Supabase Dashboard перейдите в **Settings** → **Database**
+2. Найдите раздел **Connection string**
+3. Скопируйте строку **"Connection pooling"** (рекомендуется для продакшена)
+4. Строка будет выглядеть примерно так:
 ```
 postgresql://postgres.abcdefghijklmnop:[YOUR-PASSWORD]@aws-0-eu-central-1.pooler.supabase.com:6543/postgres
 ```
 
-## Шаг 3: Настройка в Replit
+## ВАЖНО: У вас уже есть API ключи Supabase!
 
-1. В Replit перейдите в **Secrets** (иконка замка слева)
-2. Добавьте новый секрет:
-   - **Key**: `DATABASE_URL`
-   - **Value**: Вставьте вашу строку подключения из Supabase
+Ваши ключи:
+- **Publishable**: `sb_publishable_Sg5iFy2hb0ccpyWOS9fS2w_HJd1oNly`
+- **Secret**: `sb_secret_607F722vpfjcRT9ENRabnA_8qLKDrSG`
+
+Но для базы данных нужна **DATABASE_URL** (connection string), которую можно найти в Settings → Database.
+
+## Шаг 3: Добавление секретов в Replit
+
+В Replit перейдите в **Secrets** и добавьте:
+
+1. **DATABASE_URL** - строка подключения из Supabase Dashboard
+2. **SUPABASE_URL** - URL вашего проекта (например: `https://abcdefgh.supabase.co`)
+3. **SUPABASE_ANON_KEY** - ваш publishable ключ: `sb_publishable_Sg5iFy2hb0ccpyWOS9fS2w_HJd1oNly`
+4. **SUPABASE_SERVICE_ROLE_KEY** - ваш secret ключ: `sb_secret_607F722vpfjcRT9ENRabnA_8qLKDrSG`
 
 ## Шаг 4: Применение схемы базы данных
 
