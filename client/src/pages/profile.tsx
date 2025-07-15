@@ -8,12 +8,21 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import { Link } from "wouter";
 import type { Booking, Tour } from "@shared/schema";
 
 export default function Profile() {
-  const { user, logout } = useAuth();
+  const { user, isLoading } = useAuth();
+  
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/logout", { method: "POST" });
+      window.location.href = "/";
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
   
   const { data: bookings = [], isLoading: bookingsLoading } = useQuery<Booking[]>({
     queryKey: ["/api/bookings"],
@@ -22,6 +31,20 @@ export default function Profile() {
   const { data: tours = [] } = useQuery<Tour[]>({
     queryKey: ["/api/tours"],
   });
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50">
+        <Header />
+        <div className="pt-16 flex items-center justify-center h-96">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Загрузка профиля...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!user) {
     return (
@@ -71,18 +94,26 @@ export default function Profile() {
             <div className="bg-gradient-to-r from-emerald-500 to-sky-500 rounded-2xl p-8 text-white mb-8">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
-                  <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center">
-                    <User size={32} className="text-white" />
+                  <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center overflow-hidden">
+                    {user.profileImageUrl ? (
+                      <img 
+                        src={user.profileImageUrl} 
+                        alt="Profile" 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <User size={32} className="text-white" />
+                    )}
                   </div>
                   <div>
                     <h1 className="text-3xl font-bold">
-                      {user.firstName} {user.lastName}
+                      {user.firstName || user.email?.split('@')[0] || 'Пользователь'} {user.lastName || ''}
                     </h1>
                     <p className="text-white/90 text-lg">
-                      @{user.username}
+                      {user.email}
                     </p>
                     <Badge className="mt-2 bg-white/20 text-white">
-                      {user.userType === "traveler" ? "Путешественник" : "Турагентство"}
+                      {user.userType === "agency" ? "Турагентство" : "Путешественник"}
                     </Badge>
                   </div>
                 </div>
@@ -98,7 +129,7 @@ export default function Profile() {
                     variant="ghost"
                     size="icon"
                     className="text-white hover:bg-white/20"
-                    onClick={logout}
+                    onClick={handleLogout}
                   >
                     <LogOut size={20} />
                   </Button>
