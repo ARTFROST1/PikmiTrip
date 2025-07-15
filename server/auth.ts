@@ -91,10 +91,11 @@ export function setupAuth(app: Express) {
   );
 
   // Google OAuth Strategy
-  const googleClientId = process.env.GOOGLE_CLIENT_ID || "156997887121-de3pmi25dvm6pibg0hl2ttn0567olv4l.apps.googleusercontent.com";
-  const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET || "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";
+  const googleClientId = process.env.GOOGLE_CLIENT_ID;
+  const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
   
   if (googleClientId && googleClientSecret) {
+    console.log("✅ Google OAuth configured");
     passport.use(
       new GoogleStrategy(
         {
@@ -140,6 +141,8 @@ export function setupAuth(app: Express) {
         }
       )
     );
+  } else {
+    console.log("⚠️ Google OAuth not configured - missing GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET");
   }
 
   passport.serializeUser((user, done) => done(null, user.id));
