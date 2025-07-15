@@ -158,20 +158,20 @@ export default function Hero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
-          className="bg-white/15 backdrop-blur-xl rounded-3xl p-8 mb-8 border border-white/20 shadow-2xl"
+          className="bg-white/10 backdrop-blur-xl rounded-2xl p-4 mb-8 border border-white/15 shadow-lg max-w-5xl mx-auto"
         >
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
             {/* Destination with Autocomplete */}
             <div ref={destinationRef} className="relative">
-              <div className="flex items-center space-x-3 bg-white/10 rounded-2xl p-5 backdrop-blur-sm border border-white/20 hover:bg-white/15 transition-all duration-300">
-                <MapPin className="text-white flex-shrink-0" size={20} />
+              <div className="flex items-center space-x-2 bg-white/10 rounded-xl p-3.5 backdrop-blur-sm border border-white/15 hover:bg-white/15 hover:border-white/25 transition-all duration-300 h-12">
+                <MapPin className="text-white/80 flex-shrink-0" size={18} />
                 <Input
                   type="text"
                   placeholder="Куда поедем?"
                   value={searchData.destination}
                   onChange={(e) => setSearchData({ ...searchData, destination: e.target.value })}
                   onFocus={() => setShowDestinations(filteredDestinations.length > 0)}
-                  className="bg-transparent text-white placeholder-white/60 border-0 outline-none flex-1 font-medium text-lg"
+                  className="bg-transparent text-white placeholder-white/50 border-0 outline-none flex-1 font-medium text-sm h-auto p-0"
                 />
               </div>
               {/* Dropdown with suggestions */}
@@ -180,16 +180,16 @@ export default function Hero() {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-xl rounded-2xl border border-white/30 shadow-2xl z-50 max-h-60 overflow-y-auto"
+                  className="absolute top-full left-0 right-0 mt-1 bg-white/95 backdrop-blur-xl rounded-xl border border-white/20 shadow-xl z-50 max-h-48 overflow-y-auto"
                 >
-                  {filteredDestinations.map((destination, index) => (
+                  {filteredDestinations.map((destination) => (
                     <button
                       key={destination}
                       onClick={() => handleDestinationSelect(destination)}
-                      className="w-full text-left px-5 py-3 hover:bg-white/20 transition-colors duration-200 text-gray-800 font-medium first:rounded-t-2xl last:rounded-b-2xl"
+                      className="w-full text-left px-4 py-2.5 hover:bg-white/30 transition-colors duration-200 text-gray-800 font-medium text-sm first:rounded-t-xl last:rounded-b-xl"
                     >
-                      <div className="flex items-center space-x-3">
-                        <MapPin size={16} className="text-gray-600" />
+                      <div className="flex items-center space-x-2">
+                        <MapPin size={14} className="text-gray-600" />
                         <span>{destination}</span>
                       </div>
                     </button>
@@ -202,14 +202,14 @@ export default function Hero() {
             <div className="relative">
               <Popover>
                 <PopoverTrigger asChild>
-                  <div className="flex items-center space-x-3 bg-white/10 rounded-2xl p-5 backdrop-blur-sm border border-white/20 hover:bg-white/15 transition-all duration-300 cursor-pointer">
-                    <Calendar className="text-white flex-shrink-0" size={20} />
-                    <span className="text-white font-medium text-lg flex-1 truncate">
+                  <div className="flex items-center space-x-2 bg-white/10 rounded-xl p-3.5 backdrop-blur-sm border border-white/15 hover:bg-white/15 hover:border-white/25 transition-all duration-300 cursor-pointer h-12">
+                    <Calendar className="text-white/80 flex-shrink-0" size={18} />
+                    <span className="text-white font-medium text-sm flex-1 truncate">
                       {formatDateRange()}
                     </span>
                   </div>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 bg-white/95 backdrop-blur-xl border-white/30" align="start">
+                <PopoverContent className="w-auto p-0 bg-white/95 backdrop-blur-xl border-white/20" align="start">
                   <CalendarComponent
                     initialFocus
                     mode="range"
@@ -219,41 +219,41 @@ export default function Hero() {
                     numberOfMonths={2}
                     disabled={(date) => date < new Date()}
                     locale={ru}
-                    className="rounded-2xl"
+                    className="rounded-xl"
                   />
                 </PopoverContent>
               </Popover>
             </div>
 
             {/* People Counter */}
-            <div className="flex items-center space-x-3 bg-white/10 rounded-2xl p-5 backdrop-blur-sm border border-white/20">
-              <Users className="text-white flex-shrink-0" size={20} />
-              <div className="flex items-center space-x-4 flex-1">
+            <div className="flex items-center space-x-2 bg-white/10 rounded-xl p-3.5 backdrop-blur-sm border border-white/15 h-12">
+              <Users className="text-white/80 flex-shrink-0" size={18} />
+              <div className="flex items-center space-x-3 flex-1">
                 <button
                   onClick={() => handlePeopleChange(false)}
                   disabled={searchData.people <= 1}
-                  className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white hover:bg-white/30 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-white hover:bg-white/30 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Minus size={16} />
+                  <Minus size={12} />
                 </button>
-                <span className="text-white font-semibold text-lg min-w-[3ch] text-center">
+                <span className="text-white font-semibold text-sm min-w-[2ch] text-center">
                   {searchData.people}
                 </span>
                 <button
                   onClick={() => handlePeopleChange(true)}
                   disabled={searchData.people >= 20}
-                  className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white hover:bg-white/30 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-white hover:bg-white/30 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Plus size={16} />
+                  <Plus size={12} />
                 </button>
               </div>
             </div>
 
             {/* Search Button */}
             <Link href="/tours" className="block">
-              <Button className="w-full h-full bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-2xl p-5 font-semibold hover:from-orange-600 hover:to-pink-600 transition-all duration-300 transform hover:scale-105 shadow-xl hover:shadow-2xl">
-                <Search className="mr-3" size={20} />
-                <span className="text-lg">Найти</span>
+              <Button className="w-full bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-pink-600 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl h-12 text-sm">
+                <Search className="mr-2" size={16} />
+                <span>Найти</span>
               </Button>
             </Link>
           </div>
