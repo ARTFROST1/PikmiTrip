@@ -10,6 +10,15 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### Enhanced Search Form Implementation (January 2025)
+- Completely redesigned main page search form with modern, clean aesthetics
+- Added intelligent destination autocomplete with popular Russian cities and regions
+- Implemented interactive date range picker with calendar visualization and Russian locale
+- Created sleek people counter with plus/minus buttons and proper validation (1-20 people)
+- Enhanced visual design with improved backdrop blur, rounded corners, and smooth hover effects
+- Maintained minimalist design philosophy while adding advanced functionality
+- All form elements now have consistent spacing, typography, and interactive states
+
 ### Contact Page Redesign (January 2025)
 - Replaced hero section background with minimalist nature landscape (SVG-generated realistic scenery)
 - Implemented fully transparent glass-morphism contact cards with backdrop-filter blur
