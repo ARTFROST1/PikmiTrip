@@ -10,6 +10,16 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### Migration to Supabase Database (January 2025)
+- **Complete Independence**: Migrated from Replit-dependent database to Supabase
+- **Flexible Hosting**: Database no longer tied to Replit infrastructure
+- **Enhanced Reliability**: Supabase provides better uptime and performance
+- **Easy Management**: Web dashboard for database administration
+- **Scalability**: Free tier with upgrade options as needed
+- **Backup & Security**: Automatic backups and enterprise-grade security
+
+## Recent Changes
+
 ### Advanced Location Filtering & Enhanced Search System (January 2025)
 - **Comprehensive Location Database**: Built hierarchical location system with 6 Russian regions and 3 world regions
 - **Smart Keyword Matching**: Each location includes multiple keywords for intelligent tour filtering
@@ -102,7 +112,7 @@ Preferred communication style: Simple, everyday language.
 - **ORM**: Drizzle ORM for database operations and migrations
 - **Schema**: Shared schema definitions with Zod validation
 - **Development Storage**: In-memory storage implementation for development
-- **Database Provider**: Neon Database (serverless PostgreSQL)
+- **Database Provider**: Supabase (serverless PostgreSQL) - Independent from Replit
 
 ## Key Components
 
