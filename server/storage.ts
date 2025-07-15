@@ -58,8 +58,194 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  constructor() {
+    // Initialize database tables if they don't exist
+    this.initializeTables();
+  }
+
+  private async initializeTables() {
+    if (!db) {
+      console.error("❌ Database not connected");
+      return;
+    }
+    
+    try {
+      // Create tables if they don't exist
+      await db.execute(`
+        CREATE TABLE IF NOT EXISTS "sessions" (
+          "sid" varchar PRIMARY KEY,
+          "sess" jsonb NOT NULL,
+          "expire" timestamp NOT NULL
+        );
+      `);
+      
+      await db.execute(`
+        CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "sessions" ("expire");
+      `);
+      
+      await db.execute(`
+        CREATE TABLE IF NOT EXISTS "users" (
+          "id" varchar PRIMARY KEY,
+          "email" varchar UNIQUE NOT NULL,
+          "password" varchar,
+          "first_name" varchar,
+          "last_name" varchar,
+          "profile_image_url" varchar,
+          "user_type" text NOT NULL DEFAULT 'traveler',
+          "auth_provider" text NOT NULL DEFAULT 'email',
+          "google_id" varchar,
+          "stripe_customer_id" varchar,
+          "stripe_subscription_id" varchar,
+          "created_at" timestamp DEFAULT NOW(),
+          "updated_at" timestamp DEFAULT NOW()
+        );
+      `);
+      
+      await db.execute(`
+        CREATE TABLE IF NOT EXISTS "tours" (
+          "id" serial PRIMARY KEY,
+          "title" text NOT NULL,
+          "description" text NOT NULL,
+          "location" text NOT NULL,
+          "duration" text NOT NULL,
+          "price" integer NOT NULL,
+          "max_people" integer NOT NULL,
+          "image_url" text NOT NULL,
+          "rating" integer NOT NULL DEFAULT 0,
+          "category" text NOT NULL,
+          "tags" text[],
+          "is_hot" boolean DEFAULT false,
+          "included" text[],
+          "excluded" text[],
+          "program" text NOT NULL,
+          "route" text,
+          "agency_id" varchar REFERENCES "users"("id"),
+          "created_at" timestamp DEFAULT NOW()
+        );
+      `);
+      
+      await db.execute(`
+        CREATE TABLE IF NOT EXISTS "bookings" (
+          "id" serial PRIMARY KEY,
+          "tour_id" integer REFERENCES "tours"("id") NOT NULL,
+          "user_id" varchar REFERENCES "users"("id"),
+          "first_name" text NOT NULL,
+          "last_name" text NOT NULL,
+          "email" text NOT NULL,
+          "phone" text NOT NULL,
+          "people_count" integer NOT NULL,
+          "notes" text,
+          "status" text NOT NULL DEFAULT 'pending',
+          "total_price" integer NOT NULL,
+          "payment_intent_id" varchar,
+          "created_at" timestamp DEFAULT NOW()
+        );
+      `);
+      
+      await db.execute(`
+        CREATE TABLE IF NOT EXISTS "reviews" (
+          "id" serial PRIMARY KEY,
+          "tour_id" integer REFERENCES "tours"("id") NOT NULL,
+          "user_id" varchar REFERENCES "users"("id") NOT NULL,
+          "rating" integer NOT NULL,
+          "comment" text,
+          "created_at" timestamp DEFAULT NOW()
+        );
+      `);
+      
+      await db.execute(`
+        CREATE TABLE IF NOT EXISTS "favorites" (
+          "id" serial PRIMARY KEY,
+          "user_id" varchar REFERENCES "users"("id") NOT NULL,
+          "tour_id" integer REFERENCES "tours"("id") NOT NULL,
+          "created_at" timestamp DEFAULT NOW(),
+          UNIQUE("user_id", "tour_id")
+        );
+      `);
+      
+      console.log("✅ Database tables initialized");
+      
+      // Insert sample tours if database is empty
+      await this.insertSampleData();
+    } catch (error) {
+      console.error("❌ Error initializing database tables:", error);
+    }
+  }
+
+  private async insertSampleData() {
+    try {
+      // Check if tours already exist
+      const existingTours = await db.select().from(tours).limit(1);
+      if (existingTours.length > 0) {
+        console.log("✅ Sample data already exists");
+        return;
+      }
+
+      // Insert sample tours
+      const sampleTours = [
+        {
+          title: "Поездка в Сочи",
+          description: "Отдых на Черноморском побережье с пляжами и развлечениями",
+          location: "Сочи, Россия",
+          duration: "5 дней",
+          price: 25000,
+          maxPeople: 10,
+          imageUrl: "/api/placeholder/400/300",
+          rating: 45,
+          category: "beach",
+          tags: ["море", "пляж", "отдых"],
+          isHot: true,
+          included: ["Проживание", "Завтрак", "Экскурсии"],
+          excluded: ["Авиабилеты", "Обеды", "Ужины"],
+          program: "День 1: Заселение и знакомство с городом\nДень 2: Экскурсия по Олимпийскому парку\nДень 3: Поездка в Красную Поляну\nДень 4: Отдых на пляже\nДень 5: Отъезд"
+        },
+        {
+          title: "Экскурсия по Санкт-Петербургу",
+          description: "Культурная программа в северной столице",
+          location: "Санкт-Петербург, Россия",
+          duration: "3 дня",
+          price: 18000,
+          maxPeople: 15,
+          imageUrl: "/api/placeholder/400/300",
+          rating: 48,
+          category: "culture",
+          tags: ["культура", "музеи", "архитектура"],
+          isHot: false,
+          included: ["Проживание", "Завтрак", "Входные билеты"],
+          excluded: ["Авиабилеты", "Обеды"],
+          program: "День 1: Эрмитаж и Дворцовая площадь\nДень 2: Петергоф и фонтаны\nДень 3: Исаакиевский собор и Невский проспект"
+        },
+        {
+          title: "Приключения на Байкале",
+          description: "Уникальное путешествие к священному озеру",
+          location: "Байкал, Россия",
+          duration: "7 дней",
+          price: 35000,
+          maxPeople: 8,
+          imageUrl: "/api/placeholder/400/300",
+          rating: 50,
+          category: "nature",
+          tags: ["природа", "озеро", "приключения"],
+          isHot: true,
+          included: ["Проживание", "Питание", "Гид"],
+          excluded: ["Авиабилеты", "Личные расходы"],
+          program: "День 1-2: Иркутск и Листвянка\nДень 3-4: Остров Ольхон\nДень 5-6: Малое море\nДень 7: Отъезд"
+        }
+      ];
+
+      for (const tour of sampleTours) {
+        await db.insert(tours).values(tour);
+      }
+
+      console.log("✅ Sample tours inserted");
+    } catch (error) {
+      console.error("❌ Error inserting sample data:", error);
+    }
+  }
+
   // User operations - using string IDs for Replit Auth compatibility
   async getUser(id: string): Promise<User | undefined> {
+    if (!db) throw new Error("Database not connected");
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
   }
@@ -504,5 +690,8 @@ export class MemStorage implements IStorage {
   }
 }
 
-// Choose storage implementation based on environment
-export const storage = db ? new DatabaseStorage() : new MemStorage();
+// Use Supabase database storage exclusively
+export const storage = new DatabaseStorage();
+
+// Log the storage type being used
+console.log("🗄️ Using DatabaseStorage with Supabase");

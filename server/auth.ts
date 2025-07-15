@@ -31,7 +31,7 @@ async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
-  // Use in-memory session store for development, PostgreSQL for production
+  // Use Supabase PostgreSQL for session storage
   let sessionStore: any = undefined;
   
   if (process.env.DATABASE_URL) {
@@ -39,11 +39,12 @@ export function setupAuth(app: Express) {
       const PostgresSessionStore = connectPg(session);
       sessionStore = new PostgresSessionStore({
         conString: process.env.DATABASE_URL,
-        createTableIfMissing: false, // Table already exists from schema
+        createTableIfMissing: true, // Create table if it doesn't exist
         tableName: 'sessions',
       });
+      console.log("✅ Session store configured with Supabase");
     } catch (error) {
-      console.log("Session store setup failed, using in-memory store");
+      console.log("⚠️ Session store setup failed, using in-memory store:", error);
       sessionStore = undefined;
     }
   }
@@ -90,15 +91,18 @@ export function setupAuth(app: Express) {
   );
 
   // Google OAuth Strategy
-  if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  const googleClientId = process.env.GOOGLE_CLIENT_ID || "156997887121-de3pmi25dvm6pibg0hl2ttn0567olv4l.apps.googleusercontent.com";
+  const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET || "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";
+  
+  if (googleClientId && googleClientSecret) {
     passport.use(
       new GoogleStrategy(
         {
-          clientID: process.env.GOOGLE_CLIENT_ID,
-          clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+          clientID: googleClientId,
+          clientSecret: googleClientSecret,
           callbackURL: process.env.REPLIT_DOMAINS
             ? `https://${process.env.REPLIT_DOMAINS.split(',')[0]}/api/auth/google/callback`
-            : "https://85e30184-dd10-45cc-b1c5-de1000828cef-00-kxke97b9vlrc.worf.replit.dev/api/auth/google/callback",
+            : "https://7c6573ea-0a38-45e2-926e-de6bdf1eedb5-00-3qa170cgl6eju.riker.replit.dev/api/auth/google/callback",
         },
         async (accessToken, refreshToken, profile, done) => {
           try {
