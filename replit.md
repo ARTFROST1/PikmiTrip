@@ -10,18 +10,19 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-### Destination Cards & Enhanced Search Implementation (January 2025)
-- **Destination Cards Section**: Added beautiful card-based destination selection with Russian cities and world countries
-- **Interactive Filtering**: Click destination cards to automatically filter tours by location
-- **Tabbed Navigation**: Switch between Russian cities and world countries with smooth animations
-- **Rich Card Design**: Each destination card shows emoji icons, tour counts, and gradient backgrounds
-- **Smart Tour Filtering**: Tours are filtered by location keywords, titles, and descriptions when destination is selected
-- **URL Parameter Handling**: Destination selection updates URL parameters for shareable links
-- **Enhanced Search Form**: Completely redesigned with modern, clean aesthetics and consistent styling
-- **Destination Autocomplete**: Intelligent suggestions with popular Russian cities and regions
-- **Date Range Picker**: Interactive calendar with Russian locale and range visualization
-- **People Counter**: Sleek plus/minus controls with proper validation (1-20 people)
-- **Responsive Design**: All elements work perfectly on mobile and desktop with smooth animations
+### Advanced Location Filtering & Enhanced Search System (January 2025)
+- **Comprehensive Location Database**: Built hierarchical location system with 6 Russian regions and 3 world regions
+- **Smart Keyword Matching**: Each location includes multiple keywords for intelligent tour filtering
+- **Dual Location Filters**: Added both region-level and specific city/country filtering options
+- **Enhanced Tours Page**: Dedicated location filter section with organized dropdowns
+- **Intelligent Sorting**: Location-aware sorting that prioritizes relevance when filters are active
+- **Multi-level Filtering**: Filter by region (e.g., Siberia, CIS) or specific location (e.g., St. Petersburg)
+- **Destination Cards Integration**: Beautiful card-based destination selection with interactive filtering
+- **URL Parameter Support**: All filters maintain state through URL parameters for sharing
+- **Enhanced Search Form**: Refined styling with consistent spacing and modern aesthetics
+- **Advanced Keyword System**: Comprehensive keyword matching for cities, landmarks, and regional terms
+- **Smart Tour Discovery**: Tours are matched by location, title, and description content
+- **Responsive Design**: All filtering components work seamlessly across devices
 
 ### Contact Page Redesign (January 2025)
 - Replaced hero section background with minimalist nature landscape (SVG-generated realistic scenery)

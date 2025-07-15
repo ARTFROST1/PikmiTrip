@@ -33,8 +33,99 @@ const categories = [
   { id: "wellness", name: "Здоровье", icon: "🧘" },
 ];
 
+// Enhanced location data with hierarchical structure
+const locationData = {
+  russia: {
+    name: "Россия",
+    icon: "🇷🇺",
+    regions: {
+      northwest: {
+        name: "Северо-Запад",
+        cities: [
+          { id: "spb", name: "Санкт-Петербург", keywords: ["санкт-петербург", "петербург", "спб", "питер", "северная столица"] },
+          { id: "kaliningrad", name: "Калининград", keywords: ["калининград", "зеленоградск", "светлогорск", "куршская коса"] },
+          { id: "pskov", name: "Псков", keywords: ["псков", "изборск", "печоры"] },
+          { id: "novgorod", name: "Великий Новгород", keywords: ["новгород", "великий новгород", "боровичи"] }
+        ]
+      },
+      center: {
+        name: "Центр",
+        cities: [
+          { id: "moscow", name: "Москва", keywords: ["москва", "московская область", "сергиев посад", "коломна", "звенигород"] },
+          { id: "golden-ring", name: "Золотое кольцо", keywords: ["золотое кольцо", "суздаль", "владимир", "ярославль", "кострома", "ростов великий", "переславль"] },
+          { id: "tula", name: "Тула", keywords: ["тула", "ясная поляна", "куликово поле"] }
+        ]
+      },
+      south: {
+        name: "Юг",
+        cities: [
+          { id: "sochi", name: "Сочи", keywords: ["сочи", "адлер", "красная поляна", "роза хутор", "дагомыс"] },
+          { id: "krasnodar", name: "Краснодар", keywords: ["краснодар", "краснодарский край", "геленджик", "анапа"] },
+          { id: "crimea", name: "Крым", keywords: ["крым", "севастополь", "ялта", "алушта", "судак", "феодосия", "бахчисарай"] }
+        ]
+      },
+      volga: {
+        name: "Поволжье",
+        cities: [
+          { id: "kazan", name: "Казань", keywords: ["казань", "татарстан", "болгар", "свияжск"] },
+          { id: "nizhny", name: "Нижний Новгород", keywords: ["нижний новгород", "городец", "семенов"] },
+          { id: "samara", name: "Самара", keywords: ["самара", "тольятти", "жигули"] }
+        ]
+      },
+      siberia: {
+        name: "Сибирь",
+        cities: [
+          { id: "irkutsk", name: "Иркутск", keywords: ["иркутск", "байкал", "листвянка", "ольхон", "слюдянка"] },
+          { id: "novosibirsk", name: "Новосибирск", keywords: ["новосибирск", "академгородок"] },
+          { id: "altai", name: "Алтай", keywords: ["алтай", "барнаул", "горно-алтайск", "белуха", "телецкое"] }
+        ]
+      },
+      fareast: {
+        name: "Дальний Восток",
+        cities: [
+          { id: "vladivostok", name: "Владивосток", keywords: ["владивосток", "приморский край", "русский остров"] },
+          { id: "kamchatka", name: "Камчатка", keywords: ["камчатка", "петропавловск", "долина гейзеров", "авача"] }
+        ]
+      }
+    }
+  },
+  world: {
+    name: "Зарубежье",
+    icon: "🌍",
+    regions: {
+      cis: {
+        name: "СНГ",
+        countries: [
+          { id: "georgia", name: "Грузия", keywords: ["грузия", "тбилиси", "батуми", "мцхета", "кахетия", "сванетия"] },
+          { id: "armenia", name: "Армения", keywords: ["армения", "ереван", "гегард", "татев", "севан"] },
+          { id: "uzbekistan", name: "Узбекистан", keywords: ["узбекистан", "самарканд", "бухара", "хива", "ташкент"] },
+          { id: "kazakhstan", name: "Казахстан", keywords: ["казахстан", "алматы", "астана", "чарын"] }
+        ]
+      },
+      asia: {
+        name: "Азия",
+        countries: [
+          { id: "turkey", name: "Турция", keywords: ["турция", "стамбул", "каппадокия", "анталия", "памуккале", "эфес"] },
+          { id: "thailand", name: "Таиланд", keywords: ["таиланд", "бангкок", "пхукет", "паттайя", "самуи", "краби"] },
+          { id: "india", name: "Индия", keywords: ["индия", "дели", "гоа", "мумбаи", "агра", "тадж махал", "раджастан"] },
+          { id: "china", name: "Китай", keywords: ["китай", "пекин", "шанхай", "великая стена", "сиань"] }
+        ]
+      },
+      europe: {
+        name: "Европа",
+        countries: [
+          { id: "italy", name: "Италия", keywords: ["италия", "рим", "венеция", "флоренция", "милан", "тоскана"] },
+          { id: "france", name: "Франция", keywords: ["франция", "париж", "лувр", "версаль", "прованс", "лазурный берег"] },
+          { id: "spain", name: "Испания", keywords: ["испания", "мадрид", "барселона", "севилья", "гранада"] }
+        ]
+      }
+    }
+  }
+};
+
 const sortOptions = [
   { value: "popular", label: "По популярности" },
+  { value: "location", label: "По локации" },
   { value: "price-asc", label: "По возрастанию цены" },
   { value: "price-desc", label: "По убыванию цены" },
   { value: "rating", label: "По рейтингу" },
@@ -62,6 +153,8 @@ export default function Tours() {
   const [showFilters, setShowFilters] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedDestination, setSelectedDestination] = useState("");
+  const [selectedLocation, setSelectedLocation] = useState("all");
+  const [selectedRegion, setSelectedRegion] = useState("all");
 
   // Get destination from URL parameters
   React.useEffect(() => {
@@ -78,33 +171,73 @@ export default function Tours() {
     queryKey: ["/api/tours"],
   });
 
+  // Helper function to get all location keywords
+  const getAllLocationKeywords = () => {
+    const allKeywords: Array<{id: string, name: string, keywords: string[]}> = [];
+    
+    // Add Russia locations
+    Object.values(locationData.russia.regions).forEach(region => {
+      region.cities.forEach(city => {
+        allKeywords.push(city);
+      });
+    });
+    
+    // Add World locations  
+    Object.values(locationData.world.regions).forEach(region => {
+      region.countries.forEach(country => {
+        allKeywords.push(country);
+      });
+    });
+    
+    return allKeywords;
+  };
+
+  // Smart location matching function
+  const matchesLocation = (tour: Tour, locationId: string, keywords: string[]) => {
+    const searchText = `${tour.location} ${tour.title} ${tour.description}`.toLowerCase();
+    
+    // Direct keyword matching
+    const keywordMatch = keywords.some(keyword => 
+      searchText.includes(keyword.toLowerCase())
+    );
+    
+    // Additional intelligent matching
+    const cityMatch = tour.location.toLowerCase().includes(locationId);
+    const titleMatch = tour.title.toLowerCase().includes(locationId);
+    
+    return keywordMatch || cityMatch || titleMatch;
+  };
+
   const filteredAndSortedTours = useMemo(() => {
     let filtered = tours.filter(tour => {
-      // Destination filter
-      if (selectedDestination) {
-        const destinationMap: Record<string, string[]> = {
-          "spb": ["санкт-петербург", "петербург", "спб"],
-          "moscow": ["москва", "московская"],
-          "kazan": ["казань", "татарстан"],
-          "sochi": ["сочи", "адлер", "красная поляна"],
-          "irkutsk": ["иркутск", "байкал", "листвянка"],
-          "kaliningrad": ["калининград", "зеленоградск"],
-          "turkey": ["турция", "стамбул", "анталия", "каппадокия"],
-          "georgia": ["грузия", "тбилиси", "батуми"],
-          "armenia": ["армения", "ереван"],
-          "uzbekistan": ["узбекистан", "самарканд", "бухара"],
-          "thailand": ["таиланд", "бангкок", "пхукет"],
-          "india": ["индия", "дели", "гоа", "мумбаи"]
-        };
+      // Enhanced Location/Destination filter
+      if (selectedDestination || selectedLocation !== "all") {
+        const targetLocation = selectedDestination || selectedLocation;
         
-        const keywords = destinationMap[selectedDestination] || [selectedDestination];
-        const matchesDestination = keywords.some(keyword => 
-          tour.location.toLowerCase().includes(keyword) || 
-          tour.title.toLowerCase().includes(keyword) ||
-          tour.description.toLowerCase().includes(keyword)
-        );
+        // Find location data
+        const allLocations = getAllLocationKeywords();
+        const locationInfo = allLocations.find(loc => loc.id === targetLocation);
         
-        if (!matchesDestination) return false;
+        if (locationInfo) {
+          if (!matchesLocation(tour, targetLocation, locationInfo.keywords)) {
+            return false;
+          }
+        }
+      }
+
+      // Region filter
+      if (selectedRegion !== "all") {
+        const regionData = locationData.russia.regions[selectedRegion as keyof typeof locationData.russia.regions] ||
+                          locationData.world.regions[selectedRegion as keyof typeof locationData.world.regions];
+        
+        if (regionData) {
+          const regionLocations = 'cities' in regionData ? regionData.cities : regionData.countries;
+          const matchesRegion = regionLocations.some(location => 
+            matchesLocation(tour, location.id, location.keywords)
+          );
+          
+          if (!matchesRegion) return false;
+        }
       }
 
       // Search filter
@@ -166,8 +299,47 @@ export default function Tours() {
       return true;
     });
 
-    // Sort filtered tours
+    // Enhanced sorting with location relevance
     filtered.sort((a, b) => {
+      // First, check if we have location-based filters for relevance sorting
+      const hasLocationFilter = selectedDestination || selectedLocation !== "all" || selectedRegion !== "all";
+      
+      if (hasLocationFilter && sortBy === "popular") {
+        // Calculate location relevance score
+        const getLocationRelevance = (tour: Tour) => {
+          let score = 0;
+          const searchText = `${tour.location} ${tour.title} ${tour.description}`.toLowerCase();
+          
+          // Higher score for exact location matches
+          if (selectedDestination || selectedLocation !== "all") {
+            const targetLocation = selectedDestination || selectedLocation;
+            const allLocations = getAllLocationKeywords();
+            const locationInfo = allLocations.find(loc => loc.id === targetLocation);
+            
+            if (locationInfo) {
+              locationInfo.keywords.forEach(keyword => {
+                if (tour.location.toLowerCase().includes(keyword)) score += 10;
+                if (tour.title.toLowerCase().includes(keyword)) score += 5;
+                if (tour.description.toLowerCase().includes(keyword)) score += 2;
+              });
+            }
+          }
+          
+          return score;
+        };
+        
+        const scoreA = getLocationRelevance(a);
+        const scoreB = getLocationRelevance(b);
+        
+        if (scoreA !== scoreB) {
+          return scoreB - scoreA; // Higher score first
+        }
+        
+        // Fall back to rating if location scores are equal
+        return b.rating - a.rating;
+      }
+      
+      // Standard sorting
       switch (sortBy) {
         case "price-asc":
           return a.price - b.price;
@@ -177,13 +349,15 @@ export default function Tours() {
           return b.rating - a.rating;
         case "newest":
           return b.id - a.id;
+        case "location":
+          return a.location.localeCompare(b.location, 'ru');
         default: // popular
           return b.rating - a.rating;
       }
     });
 
     return filtered;
-  }, [tours, searchQuery, selectedCategories, selectedDuration, priceRange, peopleCount, sortBy, selectedDestination]);
+  }, [tours, searchQuery, selectedCategories, selectedDuration, priceRange, peopleCount, sortBy, selectedDestination, selectedLocation, selectedRegion]);
 
   const clearFilters = () => {
     setSearchQuery("");
@@ -193,6 +367,8 @@ export default function Tours() {
     setPeopleCount("all");
     setSortBy("popular");
     setSelectedDestination("");
+    setSelectedLocation("all");
+    setSelectedRegion("all");
     // Clear URL parameter
     const url = new URL(window.location.href);
     url.searchParams.delete('destination');
@@ -214,6 +390,8 @@ export default function Tours() {
     priceRange[0] !== 0 || priceRange[1] !== 50000 ? "price" : null,
     peopleCount !== "all" ? peopleCount : null,
     selectedDestination ? "destination" : null,
+    selectedLocation !== "all" ? "location" : null,
+    selectedRegion !== "all" ? "region" : null,
   ].filter(Boolean).length;
 
   return (
@@ -337,6 +515,81 @@ export default function Tours() {
                         </div>
                       </div>
                     )}
+
+                    {/* Location Filters */}
+                    <div>
+                      <Label className="text-sm font-medium mb-3 block">Локация</Label>
+                      <div className="space-y-3">
+                        {/* Region Filter */}
+                        <div>
+                          <Label className="text-xs text-gray-500 mb-2 block">Регион</Label>
+                          <Select value={selectedRegion} onValueChange={setSelectedRegion}>
+                            <SelectTrigger className="text-sm">
+                              <SelectValue placeholder="Выберите регион" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">Все регионы</SelectItem>
+                              <SelectItem value="northwest">🇷🇺 Северо-Запад</SelectItem>
+                              <SelectItem value="center">🇷🇺 Центр</SelectItem>
+                              <SelectItem value="south">🇷🇺 Юг</SelectItem>
+                              <SelectItem value="volga">🇷🇺 Поволжье</SelectItem>
+                              <SelectItem value="siberia">🇷🇺 Сибирь</SelectItem>
+                              <SelectItem value="fareast">🇷🇺 Дальний Восток</SelectItem>
+                              <SelectItem value="cis">🌍 СНГ</SelectItem>
+                              <SelectItem value="asia">🌍 Азия</SelectItem>
+                              <SelectItem value="europe">🌍 Европа</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Specific Location Filter */}
+                        <div>
+                          <Label className="text-xs text-gray-500 mb-2 block">Город/Страна</Label>
+                          <Select value={selectedLocation} onValueChange={setSelectedLocation}>
+                            <SelectTrigger className="text-sm">
+                              <SelectValue placeholder="Выберите локацию" />
+                            </SelectTrigger>
+                            <SelectContent className="max-h-64">
+                              <SelectItem value="all">Все локации</SelectItem>
+                              
+                              {/* Russian Cities */}
+                              <div className="px-2 py-1 text-xs font-semibold text-gray-500 bg-gray-50">
+                                🇷🇺 РОССИЯ
+                              </div>
+                              {Object.entries(locationData.russia.regions).map(([regionKey, region]) => (
+                                <div key={regionKey}>
+                                  <div className="px-3 py-1 text-xs text-gray-400">
+                                    {region.name}
+                                  </div>
+                                  {region.cities.map(city => (
+                                    <SelectItem key={city.id} value={city.id} className="pl-6">
+                                      {city.name}
+                                    </SelectItem>
+                                  ))}
+                                </div>
+                              ))}
+                              
+                              {/* World Countries */}
+                              <div className="px-2 py-1 text-xs font-semibold text-gray-500 bg-gray-50 mt-2">
+                                🌍 ЗАРУБЕЖЬЕ
+                              </div>
+                              {Object.entries(locationData.world.regions).map(([regionKey, region]) => (
+                                <div key={regionKey}>
+                                  <div className="px-3 py-1 text-xs text-gray-400">
+                                    {region.name}
+                                  </div>
+                                  {('countries' in region ? region.countries : []).map(country => (
+                                    <SelectItem key={country.id} value={country.id} className="pl-6">
+                                      {country.name}
+                                    </SelectItem>
+                                  ))}
+                                </div>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </div>
 
                     {/* Category Filter */}
                     <div>
