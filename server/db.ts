@@ -6,9 +6,9 @@ import * as schema from "@shared/schema";
 let db: any = null;
 
 // Use provided Supabase URL or environment variable
-const supabaseUrl = process.env.DATABASE_URL || "postgresql://postgres:lfpyfwjqgztjrsbnsnuj@db.lfpyfwjqgztjrsbnsnuj.supabase.co:5432/postgres";
+const supabaseUrl = process.env.DATABASE_URL;
 
-if (supabaseUrl) {
+if (supabaseUrl && supabaseUrl.includes('supabase.co')) {
   try {
     // Create the connection to Supabase PostgreSQL
     const client = postgres(supabaseUrl, { 
@@ -23,9 +23,11 @@ if (supabaseUrl) {
   } catch (error) {
     console.error("❌ Failed to connect to Supabase:", error);
     console.log("⚠️ Falling back to in-memory storage for development");
+    db = null;
   }
 } else {
-  console.log("⚠️ DATABASE_URL not set, using in-memory storage for development");
+  console.log("⚠️ DATABASE_URL not properly configured, using in-memory storage for development");
+  db = null;
 }
 
 export { db };

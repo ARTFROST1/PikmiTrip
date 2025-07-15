@@ -70,6 +70,11 @@ export class DatabaseStorage implements IStorage {
     }
     
     try {
+      // Test database connection first
+      console.log("🔍 Testing database connection...");
+      await db.execute(`SELECT 1`);
+      console.log("✅ Database connection successful");
+      
       // Create tables if they don't exist
       await db.execute(`
         CREATE TABLE IF NOT EXISTS "sessions" (
@@ -169,6 +174,7 @@ export class DatabaseStorage implements IStorage {
       await this.insertSampleData();
     } catch (error) {
       console.error("❌ Error initializing database tables:", error);
+      console.error("❌ Database connection failed - please check your DATABASE_URL");
     }
   }
 
@@ -690,8 +696,12 @@ export class MemStorage implements IStorage {
   }
 }
 
-// Use Supabase database storage exclusively
-export const storage = new DatabaseStorage();
+// Use Supabase database storage exclusively, with fallback to memory storage if database fails
+export const storage = db ? new DatabaseStorage() : new MemStorage();
 
 // Log the storage type being used
-console.log("🗄️ Using DatabaseStorage with Supabase");
+if (db) {
+  console.log("🗄️ Using DatabaseStorage with Supabase");
+} else {
+  console.log("⚠️ Using MemStorage (fallback) - check DATABASE_URL");
+}
