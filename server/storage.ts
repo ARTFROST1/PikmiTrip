@@ -1,4 +1,5 @@
 import { eq, and } from "drizzle-orm";
+import { db } from "./db";
 import {
   users,
   tours,

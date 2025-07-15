@@ -31,12 +31,22 @@ async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
-  const PostgresSessionStore = connectPg(session);
-  const sessionStore = new PostgresSessionStore({
-    conString: process.env.DATABASE_URL,
-    createTableIfMissing: false, // Table already exists from schema
-    tableName: 'sessions',
-  });
+  // Use in-memory session store for development, PostgreSQL for production
+  let sessionStore: any = undefined;
+  
+  if (process.env.DATABASE_URL) {
+    try {
+      const PostgresSessionStore = connectPg(session);
+      sessionStore = new PostgresSessionStore({
+        conString: process.env.DATABASE_URL,
+        createTableIfMissing: false, // Table already exists from schema
+        tableName: 'sessions',
+      });
+    } catch (error) {
+      console.log("Session store setup failed, using in-memory store");
+      sessionStore = undefined;
+    }
+  }
 
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "dev-secret-key",
