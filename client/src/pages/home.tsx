@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import Header from "@/components/header";
 import Hero from "@/components/hero";
+import DestinationCards from "@/components/destination-cards";
 import Filters from "@/components/filters";
 import TourCard from "@/components/tour-card";
 import Footer from "@/components/footer";
@@ -40,6 +41,8 @@ export default function Home() {
     <div className="min-h-screen bg-slate-50">
       <Header />
       <Hero />
+      
+      <DestinationCards />
       
       <section className="py-12 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

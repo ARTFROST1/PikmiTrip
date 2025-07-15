@@ -10,14 +10,18 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-### Enhanced Search Form Implementation (January 2025)
-- Completely redesigned main page search form with modern, clean aesthetics
-- Added intelligent destination autocomplete with popular Russian cities and regions
-- Implemented interactive date range picker with calendar visualization and Russian locale
-- Created sleek people counter with plus/minus buttons and proper validation (1-20 people)
-- Enhanced visual design with improved backdrop blur, rounded corners, and smooth hover effects
-- Maintained minimalist design philosophy while adding advanced functionality
-- All form elements now have consistent spacing, typography, and interactive states
+### Destination Cards & Enhanced Search Implementation (January 2025)
+- **Destination Cards Section**: Added beautiful card-based destination selection with Russian cities and world countries
+- **Interactive Filtering**: Click destination cards to automatically filter tours by location
+- **Tabbed Navigation**: Switch between Russian cities and world countries with smooth animations
+- **Rich Card Design**: Each destination card shows emoji icons, tour counts, and gradient backgrounds
+- **Smart Tour Filtering**: Tours are filtered by location keywords, titles, and descriptions when destination is selected
+- **URL Parameter Handling**: Destination selection updates URL parameters for shareable links
+- **Enhanced Search Form**: Completely redesigned with modern, clean aesthetics and consistent styling
+- **Destination Autocomplete**: Intelligent suggestions with popular Russian cities and regions
+- **Date Range Picker**: Interactive calendar with Russian locale and range visualization
+- **People Counter**: Sleek plus/minus controls with proper validation (1-20 people)
+- **Responsive Design**: All elements work perfectly on mobile and desktop with smooth animations
 
 ### Contact Page Redesign (January 2025)
 - Replaced hero section background with minimalist nature landscape (SVG-generated realistic scenery)

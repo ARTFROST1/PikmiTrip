@@ -61,6 +61,18 @@ export default function Tours() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [showFilters, setShowFilters] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [selectedDestination, setSelectedDestination] = useState("");
+
+  // Get destination from URL parameters
+  React.useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const destination = urlParams.get('destination');
+    if (destination) {
+      setSelectedDestination(destination);
+      // Auto-open filters to show the destination filter
+      setShowFilters(true);
+    }
+  }, []);
 
   const { data: tours = [], isLoading } = useQuery<Tour[]>({
     queryKey: ["/api/tours"],
@@ -68,6 +80,33 @@ export default function Tours() {
 
   const filteredAndSortedTours = useMemo(() => {
     let filtered = tours.filter(tour => {
+      // Destination filter
+      if (selectedDestination) {
+        const destinationMap: Record<string, string[]> = {
+          "spb": ["санкт-петербург", "петербург", "спб"],
+          "moscow": ["москва", "московская"],
+          "kazan": ["казань", "татарстан"],
+          "sochi": ["сочи", "адлер", "красная поляна"],
+          "irkutsk": ["иркутск", "байкал", "листвянка"],
+          "kaliningrad": ["калининград", "зеленоградск"],
+          "turkey": ["турция", "стамбул", "анталия", "каппадокия"],
+          "georgia": ["грузия", "тбилиси", "батуми"],
+          "armenia": ["армения", "ереван"],
+          "uzbekistan": ["узбекистан", "самарканд", "бухара"],
+          "thailand": ["таиланд", "бангкок", "пхукет"],
+          "india": ["индия", "дели", "гоа", "мумбаи"]
+        };
+        
+        const keywords = destinationMap[selectedDestination] || [selectedDestination];
+        const matchesDestination = keywords.some(keyword => 
+          tour.location.toLowerCase().includes(keyword) || 
+          tour.title.toLowerCase().includes(keyword) ||
+          tour.description.toLowerCase().includes(keyword)
+        );
+        
+        if (!matchesDestination) return false;
+      }
+
       // Search filter
       if (searchQuery && !tour.title.toLowerCase().includes(searchQuery.toLowerCase()) && 
           !tour.description.toLowerCase().includes(searchQuery.toLowerCase()) &&
@@ -144,7 +183,7 @@ export default function Tours() {
     });
 
     return filtered;
-  }, [tours, searchQuery, selectedCategories, selectedDuration, priceRange, peopleCount, sortBy]);
+  }, [tours, searchQuery, selectedCategories, selectedDuration, priceRange, peopleCount, sortBy, selectedDestination]);
 
   const clearFilters = () => {
     setSearchQuery("");
@@ -153,6 +192,11 @@ export default function Tours() {
     setPriceRange([0, 50000]);
     setPeopleCount("all");
     setSortBy("popular");
+    setSelectedDestination("");
+    // Clear URL parameter
+    const url = new URL(window.location.href);
+    url.searchParams.delete('destination');
+    window.history.replaceState({}, '', url.toString());
   };
 
   const toggleCategory = (categoryId: string) => {
@@ -169,6 +213,7 @@ export default function Tours() {
     selectedDuration !== "all" ? selectedDuration : null,
     priceRange[0] !== 0 || priceRange[1] !== 50000 ? "price" : null,
     peopleCount !== "all" ? peopleCount : null,
+    selectedDestination ? "destination" : null,
   ].filter(Boolean).length;
 
   return (
@@ -254,6 +299,45 @@ export default function Tours() {
                   </div>
 
                   <div className="space-y-6">
+                    {/* Destination Filter */}
+                    {selectedDestination && (
+                      <div>
+                        <Label className="text-sm font-medium mb-3 block">Направление</Label>
+                        <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border">
+                          <div className="flex items-center space-x-2">
+                            <MapPin size={16} className="text-blue-600" />
+                            <span className="text-sm font-medium text-blue-900">
+                              {selectedDestination === 'spb' && 'Санкт-Петербург'}
+                              {selectedDestination === 'moscow' && 'Москва'}
+                              {selectedDestination === 'kazan' && 'Казань'}
+                              {selectedDestination === 'sochi' && 'Сочи'}
+                              {selectedDestination === 'irkutsk' && 'Иркутск'}
+                              {selectedDestination === 'kaliningrad' && 'Калининград'}
+                              {selectedDestination === 'turkey' && 'Турция'}
+                              {selectedDestination === 'georgia' && 'Грузия'}
+                              {selectedDestination === 'armenia' && 'Армения'}
+                              {selectedDestination === 'uzbekistan' && 'Узбекистан'}
+                              {selectedDestination === 'thailand' && 'Таиланд'}
+                              {selectedDestination === 'india' && 'Индия'}
+                            </span>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedDestination("");
+                              const url = new URL(window.location.href);
+                              url.searchParams.delete('destination');
+                              window.history.replaceState({}, '', url.toString());
+                            }}
+                            className="text-blue-600 hover:text-blue-800"
+                          >
+                            <X size={14} />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Category Filter */}
                     <div>
                       <Label className="text-sm font-medium mb-3 block">
