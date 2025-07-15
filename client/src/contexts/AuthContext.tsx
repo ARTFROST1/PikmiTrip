@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import type { User } from "@shared/schema";
+import { supabase } from "@/lib/supabase";
 
 interface AuthContextType {
   user: User | null;
@@ -7,32 +8,78 @@ interface AuthContextType {
   logout: () => void;
   isAuthenticated: boolean;
   isAgency: boolean;
+  isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
+    // Check if user is already authenticated
+    const checkUser = async () => {
       try {
-        setUser(JSON.parse(storedUser));
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          // Fetch user data from our database
+          const response = await fetch('/api/auth/user', {
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`
+            }
+          });
+          
+          if (response.ok) {
+            const userData = await response.json();
+            setUser(userData);
+          }
+        }
       } catch (error) {
-        localStorage.removeItem("user");
+        console.error('Error checking user:', error);
+      } finally {
+        setIsLoading(false);
       }
-    }
+    };
+
+    checkUser();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === 'SIGNED_IN' && session) {
+          // Fetch user data from our database
+          try {
+            const response = await fetch('/api/auth/user', {
+              headers: {
+                'Authorization': `Bearer ${session.access_token}`
+              }
+            });
+            
+            if (response.ok) {
+              const userData = await response.json();
+              setUser(userData);
+            }
+          } catch (error) {
+            console.error('Error fetching user data:', error);
+          }
+        } else if (event === 'SIGNED_OUT') {
+          setUser(null);
+        }
+        setIsLoading(false);
+      }
+    );
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const login = (userData: User) => {
     setUser(userData);
-    localStorage.setItem("user", JSON.stringify(userData));
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
-    localStorage.removeItem("user");
   };
 
   const isAuthenticated = !!user;
@@ -45,6 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       logout,
       isAuthenticated,
       isAgency,
+      isLoading,
     }}>
       {children}
     </AuthContext.Provider>

@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertTourSchema, insertBookingSchema, insertReviewSchema } from "@shared/schema";
-import { setupAuth } from "./auth";
+import { setupSupabaseAuth, requireAuth } from "./supabaseAuth";
 import { z } from "zod";
 import Stripe from "stripe";
 
@@ -14,19 +14,16 @@ if (process.env.STRIPE_SECRET_KEY) {
   });
 }
 
-// Middleware to check authentication
+// Middleware to check authentication (using Supabase Auth)
 function isAuthenticated(req: any, res: any, next: any) {
-  if (req.isAuthenticated()) {
+  if (req.user) {
     return next();
   }
   return res.status(401).json({ message: "Unauthorized" });
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Auth middleware
-  setupAuth(app);
-
-  // Tours
+  // Tours (public route)
   app.get("/api/tours", async (req, res) => {
     try {
       const { category, hot } = req.query;
